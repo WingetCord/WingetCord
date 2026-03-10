@@ -10,7 +10,7 @@ A high-performance, modular Discord framework in TypeScript.
 ## Getting Started
 
 ```bash
-npm install @wingetcord/wingetcord
+npm install github:wingetcord/WingetCord
 ```
 
 ```typescript

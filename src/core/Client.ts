@@ -15,6 +15,10 @@ import { HandlerManager } from './HandlerManager.js';
 import { Message } from '../structures/Message.js';
 import { User } from '../structures/User.js';
 
+export interface ClientStore {
+  [key: string]: unknown;
+}
+
 export class Client extends EventEmitter {
   public readonly token: string;
   public readonly rest: RESTManager;
@@ -26,7 +30,7 @@ export class Client extends EventEmitter {
   public readonly interactions: InteractionManager;
   public readonly handler: HandlerManager;
   public readonly voice: VoiceManager;
-  public readonly store: unknown;
+  public readonly store: ClientStore;
   public user: User | null = null;
 
   private readonly middlewares: ((ctx: unknown, next: () => Promise<void>) => unknown)[] = [];

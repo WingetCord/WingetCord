@@ -3,10 +3,11 @@ import { join } from 'path';
 import { pathToFileURL } from 'url';
 import type { Client } from './Client.js';
 import { Logger } from './Logger.js';
+import { Message } from '../structures/Message.js';
 
 export interface CommandContext {
   client: Client;
-  message: unknown;
+  message: Message;
   args: string[];
 }
 
@@ -20,7 +21,7 @@ export interface CommandOptions {
 
 export abstract class Command {
   constructor(public options: CommandOptions) {}
-  abstract execute(ctx: CommandContext): void | Promise<void>;
+  abstract execute(ctx: CommandContext): unknown;
 }
 
 export class CommandManager {
@@ -142,7 +143,8 @@ export class CommandManager {
     }
 
     try {
-      await command.execute({ client: this.client, message, args });
+      const msgObj = new Message(this.client, message as Record<string, unknown>);
+      await command.execute({ client: this.client, message: msgObj, args });
     } catch (error) {
       Logger.error(`Error executing command ${commandName}:`, error);
     }

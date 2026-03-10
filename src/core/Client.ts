@@ -53,12 +53,56 @@ export class Client extends EventEmitter {
     });
   }
 
-  private middlewares: ((ctx: any, next: () => Promise<void>) => Promise<void>)[] = [];
+  /**
+   * High-level shortcut to send a message to a channel.
+   */
+  public async say(channelId: string, content: string | any) {
+    return this.rest.channels.sendMessage(channelId, typeof content === 'string' ? { content } : content);
+  }
+
+  /**
+   * Fluent listener for MESSAGE_CREATE events.
+   */
+  public onMessage(callback: (message: any) => any) {
+    this.on('MESSAGE_CREATE', callback);
+    return this;
+  }
+
+  /**
+   * Fluent listener for INTERACTION_CREATE events.
+   */
+  public onInteraction(callback: (interaction: any) => any) {
+    this.on('interaction', callback);
+    return this;
+  }
+
+  /**
+   * Fluent listener for READY event.
+   */
+  public onReady(callback: (user: any) => any) {
+    this.on('READY', callback);
+    return this;
+  }
+
+  /**
+   * Get an instant health report of the bot.
+   */
+  public pulse() {
+    return {
+      status: this.gateway.status,
+      ping: this.gateway.ping,
+      uptime: process.uptime(),
+      memory: process.memoryUsage().heapUsed / 1024 / 1024,
+      guilds: this.cache.guilds.size
+    };
+  }
+
+  private middlewares: ((ctx: any, next: () => Promise<void>) => any)[] = [];
 
   /**
    * Add middleware to the client flow.
    */
-  public use(middleware: (ctx: any, next: () => Promise<void>) => Promise<void>) {
+  public use(middleware: (ctx: any, next: () => Promise<void>) => any) {
     this.middlewares.push(middleware);
     return this;
   }
@@ -79,19 +123,19 @@ export class Client extends EventEmitter {
   }
 
   private async handleEvent(event: string, data: any) {
-    const ctx = { client: this, event, data };
+    const ctx = { client: this, event, data, timestamp: Date.now() };
     
-    let index = -1;
+    let index = 0;
     const next = async () => {
-      index++;
       if (index < this.middlewares.length) {
-        await this.middlewares[index](ctx, next);
+        const middleware = this.middlewares[index++];
+        if (middleware) await middleware(ctx, next);
       } else {
         this.emit(event, data);
         this.emit('raw', event, data);
       }
     };
 
-    await next();
+    await next().catch(err => Logger.error(`Middleware error on ${event}:`, err));
   }
 }

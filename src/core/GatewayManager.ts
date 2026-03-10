@@ -16,9 +16,11 @@ export interface ShardOptions {
  */
 export class GatewayManager extends EventEmitter {
   private ws?: WebSocket;
-  private token: string;
-  private intents: number;
   private shard?: ShardOptions;
+  
+  public status: 'CONNECTED' | 'CONNECTING' | 'DISCONNECTED' | 'RECONNECTING' = 'DISCONNECTED';
+  public ping = 0;
+  private lastHeartbeatSend = 0;
   
   private heartbeatInterval?: NodeJS.Timeout;
   private lastSequence: number | null = null;
@@ -52,6 +54,7 @@ export class GatewayManager extends EventEmitter {
 
     this.ws.on('open', () => {
       this.isConnecting = false;
+      this.status = 'CONNECTED';
       Logger.info(`Connected to Discord Gateway [Shard ${this.shard?.id ?? 0}]`);
     });
 
@@ -73,6 +76,7 @@ export class GatewayManager extends EventEmitter {
 
     this.ws.on('close', (code, reason) => {
       this.isConnecting = false;
+      this.status = 'DISCONNECTED';
       Logger.warn(`Gateway connection closed [Shard ${this.shard?.id ?? 0}] (${code}): ${reason}`);
       this.handleClose(code);
     });
@@ -95,7 +99,8 @@ export class GatewayManager extends EventEmitter {
         }
         break;
       case 11: // Heartbeat ACK
-        Logger.debug(`Heartbeat acknowledged [Shard ${this.shard?.id ?? 0}]`);
+        this.ping = Date.now() - this.lastHeartbeatSend;
+        Logger.debug(`Heartbeat acknowledged [Shard ${this.shard?.id ?? 0}] (${this.ping}ms)`);
         break;
       case 0: // Dispatch
         if (payload.t === 'READY') {
@@ -135,6 +140,7 @@ export class GatewayManager extends EventEmitter {
   }
 
   private sendHeartbeat() {
+    this.lastHeartbeatSend = Date.now();
     this.send(JSON.stringify({ op: 1, d: this.lastSequence }));
   }
 

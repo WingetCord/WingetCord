@@ -3,22 +3,21 @@ import type { Client } from './Client.js';
 import { Collector } from '../utils/Collector.js';
 import type { CollectorOptions } from '../utils/Collector.js';
 import { Logger } from './Logger.js';
+import { Interaction, CommandInteraction, ComponentInteraction } from '../structures/Interaction.js';
 
 /**
  * InteractionManager: Handles Slash Commands and MESSAGE_COMPONENT interactions.
- * optimized for fast acknowledgement and robust cleanup.
  */
 export class InteractionManager extends EventEmitter {
   private collectors: Set<Collector<any>> = new Set();
 
   constructor(private client: Client) {
     super();
-    this.client.on('INTERACTION_CREATE', (interaction: any) => this.handleInteraction(interaction));
+    this.client.on('INTERACTION_CREATE', (payload: any) => this.handleInteraction(payload));
   }
 
   /**
    * Creates a dedicated collector for interactions.
-   * Ensures automated cleanup to prevent memory leaks.
    */
   createCollector<T = any>(options: CollectorOptions<T>): Collector<T> {
     const collector = new Collector<T>(options);
@@ -32,57 +31,48 @@ export class InteractionManager extends EventEmitter {
     return collector;
   }
 
-  private async handleInteraction(interaction: any) {
+  private async handleInteraction(payload: any) {
     try {
+      let interaction: Interaction;
+
+      if (payload.type === 2) {
+        interaction = new CommandInteraction(this.client, payload);
+      } else if (payload.type === 3) {
+        interaction = new ComponentInteraction(this.client, payload);
+      } else {
+        interaction = new Interaction(this.client, payload);
+      }
+
       // 1. Check Collectors first
       for (const collector of this.collectors) {
-        // Use custom_id or message_id as identifier
-        const id = interaction.data?.custom_id || interaction.id;
+        const id = payload.data?.custom_id || payload.id;
         if (collector.handle(interaction, id)) return;
       }
 
-      // 2. Fast Acknowledge logic if needed (handled by handlers usually)
-      
-      // 3. Handle Slash Commands
-      if (interaction.type === 2) { // APPLICATION_COMMAND
+      // 2. Handle Events
+      if (interaction instanceof CommandInteraction) {
         this.emit('command', interaction);
-      }
-
-      // 4. Handle Components (Buttons, Menus)
-      if (interaction.type === 3) { // MESSAGE_COMPONENT
+      } else if (interaction instanceof ComponentInteraction) {
         this.emit('component', interaction);
       }
+      
+      this.emit('interaction', interaction);
+
     } catch (err) {
       Logger.error('Error handling interaction:', err);
-      // Try to send an error response if possible
-      this.sendErrorResponse(interaction, 'An internal error occurred while processing this interaction.');
-    }
-  }
-
-  private async sendErrorResponse(interaction: any, message: string) {
-    try {
-      await this.client.rest.request('POST', `/interactions/${interaction.id}/${interaction.token}/callback`, {
-        type: 4, // CHANNEL_MESSAGE_WITH_SOURCE
-        data: {
-          content: message,
-          flags: 64 // EPHEMERAL
-        }
-      });
-    } catch (e) {
-      // Ignore if already acknowledged
     }
   }
 
   /**
-   * Helper to acknowledge interactions quickly (< 3s)
+   * Helper to acknowledge interactions (Legacy/Raw)
    */
-  async acknowledge(interaction: any, type: number = 6) {
+  async acknowledge(interactionId: string, token: string, type: number = 6) {
     try {
-      await this.client.rest.request('POST', `/interactions/${interaction.id}/${interaction.token}/callback`, {
+      await this.client.rest.request('POST', `/interactions/${interactionId}/${token}/callback`, {
         type: type
       });
     } catch (err) {
-      Logger.error(`Failed to acknowledge interaction ${interaction.id}`, err);
+      Logger.error(`Failed to acknowledge interaction ${interactionId}`, err);
     }
   }
 

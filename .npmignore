@@ -1,0 +1,18 @@
+# Source code
+src/
+tsconfig.json
+
+# Environment and logs
+.env
+*.log
+npm-debug.log*
+
+# Examples and development
+examples/
+.git/
+.gitignore
+.gemini/
+
+# Misc
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md

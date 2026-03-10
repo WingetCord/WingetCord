@@ -1,16 +1,35 @@
 {
-  "name": "wingetcord",
+  "name": "@wingetcord/wingetcord",
   "version": "1.0.0",
   "type": "module",
-  "description": "A high-performance Discord framework in TypeScript.",
+  "description": "A high-performance, modular Discord framework in TypeScript. Closed-source, private package.",
   "main": "dist/index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node-esm src/index.ts"
+  "types": "dist/index.d.ts",
+  "keywords": [
+    "discord",
+    "bot",
+    "typescript",
+    "framework",
+    "wingetcord"
+  ],
+  "author": "Mr.Winget",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "private": false,
+  "publishConfig": {
+    "access": "restricted"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "files": [
+    "dist",
+    "docs",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node-esm src/index.ts",
+    "clean": "rimraf dist",
+    "prepublishOnly": "npm run build"
+  },
   "dependencies": {
     "@types/pako": "^2.0.4",
     "discord-api-types": "^0.37.91",
@@ -25,6 +44,7 @@
     "@types/node": "^20.14.9",
     "@types/ws": "^8.5.10",
     "edge-runtime": "^2.5.9",
+    "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.3"
   }

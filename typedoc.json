@@ -1,0 +1,19 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts"],
+  "entryPointStrategy": "expand",
+  "out": "docs",
+  "name": "WingetCord",
+  "includeVersion": true,
+  "readme": "README.md",
+  "githubPages": false,
+  "navigationLinks": {
+    "GitHub": "https://github.com/wingetcord/wingetcord",
+    "Discord": "https://discord.gg/wingetcord"
+  },
+  "visibilityFilters": {
+    "inherited": true
+  },
+  "excludePrivate": false,
+  "excludeProtected": false
+}

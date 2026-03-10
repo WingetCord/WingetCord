@@ -1,71 +1,28 @@
-name: Discord Notify - Push Event
+name: Discord Notify - Push
 
 on:
   push:
-    branches: [main, master] 
+    branches: [main]
 
 jobs:
-  notify-discord:
+  notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code 
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0   
-
-      - name: Prepare commit info
-        id: commit_info
-        run: |
-          COMMIT_MESSAGE=$(git log -1 --pretty=%s)
-          COMMIT_AUTHOR=$(git log -1 --pretty=%an)
-          COMMIT_AUTHOR_EMAIL=$(git log -1 --pretty=%ae)
-          COMMIT_URL="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
-          COMMIT_SHORT_SHA=$(git rev-parse --short HEAD)
-          
-          COMMIT_COUNT=$(git rev-list ${{ github.event.before }}..${{ github.sha }} --count 2>/dev/null || echo "1")
-          
-          if [ "$COMMIT_COUNT" -eq 1 ]; then
-            DESCRIPTION="**${COMMIT_AUTHOR}** pushed a new commit"
-          else
-            DESCRIPTION="**${COMMIT_AUTHOR}** pushed **${COMMIT_COUNT}** commits"
-          fi
-
-          EMBED_JSON=$(cat <<EOF
-          {
-            "embeds": [
-              {
-                "color": 5763719,
-                "title": "New Push to \`${{ github.ref_name }}\`",
-                "url": "$COMMIT_URL",
-                "description": "$DESCRIPTION\n\`\`\`\n${COMMIT_MESSAGE}\n\`\`\`",
-                "fields": [
-                  {
-                    "name": "Commit",
-                    "value": "[\`${COMMIT_SHORT_SHA}\`]($COMMIT_URL)",
-                    "inline": true
-                  },
-                  {
-                    "name": "Author",
-                    "value": "${COMMIT_AUTHOR} (${COMMIT_AUTHOR_EMAIL})",
-                    "inline": true
-                  }
-                ],
-                "timestamp": "${{ github.event.head_commit.timestamp }}",
-                "footer": {
-                  "text": "Repository: ${{ github.repository }}"
-                }
-              }
-            ]
-          }
-          EOF
-          )
-
-          echo "embed=$EMBED_JSON" >> $GITHUB_OUTPUT
-
       - name: Send Discord Embed
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: |
           curl -H "Content-Type: application/json" \
-            -d '${{ steps.commit_info.outputs.embed }}' \
-            $DISCORD_WEBHOOK
+            -d '{
+              "embeds": [{
+                "color": 5763719,
+                "title": "New Push to `${{ github.ref_name }}`",
+                "url": "${{ github.event.head_commit.url }}",
+                "description": "```${{ github.event.head_commit.message }}```",
+                "fields": [
+                  {"name": "By", "value": "${{ github.actor }}", "inline": true},
+                  {"name": "Commit", "value": "[`${{ github.sha }}`](${{ github.event.head_commit.url }})", "inline": true}
+                ],
+                "timestamp": "${{ github.event.head_commit.timestamp }}",
+                "footer": {"text": "${{ github.repository }} • ${{ github.event.head_commit.author.username }}"}
+              }]
+            }' \
+            ${{ secrets.DISCORD_WEBHOOK }}

@@ -14,6 +14,9 @@ import { StickerHandler } from '../rest/StickerHandler.js';
 import { EmojiHandler } from '../rest/EmojiHandler.js';
 import type { Client } from './Client.js';
 
+// Import type-safe route utilities
+import { getRouteKey, type HttpMethod, type Route } from '../rest/types.js';
+
 export interface RequestOptions {
   method: 'GET' | 'POST' | 'PATCH' | 'DELETE' | 'PUT';
   endpoint: string;
@@ -22,6 +25,10 @@ export interface RequestOptions {
   useCache?: boolean;
 }
 
+/**
+ * Enhanced RESTManager with type-safe methods
+ * Maintains backward compatibility while adding new type-safe API
+ */
 export class RESTManager {
   private pool: Pool;
   private rateLimits = new Map<string, RateLimitData>();
@@ -55,6 +62,9 @@ export class RESTManager {
     this.emojis = new EmojiHandler(this);
   }
 
+  /**
+   * Get route key for rate limiting
+   */
   private getRoute(endpoint: string): string {
     const majorParams = ['guilds', 'channels', 'webhooks'];
     const parts = endpoint.split('/').filter(Boolean);
@@ -69,6 +79,79 @@ export class RESTManager {
     }
     return route || '/';
   }
+
+  // ============== Type-safe Methods ==============
+
+  /**
+   * Type-safe GET request
+   */
+  async get<T = unknown>(route: Route, query?: Record<string, string>): Promise<T> {
+    let url = route;
+    if (query && Object.keys(query).length > 0) {
+      const params = new URLSearchParams(query);
+      url += `?${params.toString()}`;
+    }
+    return this.request('GET', url, undefined, { useCache: true }) as Promise<T>;
+  }
+
+  /**
+   * Type-safe POST request
+   */
+  async post<T = unknown>(route: Route, body?: unknown): Promise<T> {
+    return this.request('POST', route, body) as Promise<T>;
+  }
+
+  /**
+   * Type-safe PUT request
+   */
+  async put<T = unknown>(route: Route, body?: unknown): Promise<T> {
+    return this.request('PUT', route, body) as Promise<T>;
+  }
+
+  /**
+   * Type-safe PATCH request
+   */
+  async patch<T = unknown>(route: Route, body?: unknown): Promise<T> {
+    return this.request('PATCH', route, body) as Promise<T>;
+  }
+
+  /**
+   * Type-safe DELETE request
+   */
+  async delete<T = unknown>(route: Route): Promise<T> {
+    return this.request('DELETE', route) as Promise<T>;
+  }
+
+  /**
+   * Get rate limit info for a route
+   */
+  getRateLimitInfo(route: string): RateLimitData | undefined {
+    const routeKey = getRouteKey('GET', route);
+    return this.rateLimits.get(routeKey);
+  }
+
+  /**
+   * Check if a route is rate limited
+   */
+  isRateLimited(route: string): boolean {
+    const routeKey = getRouteKey('GET', route);
+    const rl = this.rateLimits.get(routeKey);
+    return !!(rl && rl.remaining === 0 && Date.now() < rl.reset);
+  }
+
+  /**
+   * Get time until rate limit resets
+   */
+  getRateLimitReset(route: string): number {
+    const routeKey = getRouteKey('GET', route);
+    const rl = this.rateLimits.get(routeKey);
+    if (rl && rl.remaining === 0 && Date.now() < rl.reset) {
+      return rl.reset - Date.now();
+    }
+    return 0;
+  }
+
+  // ============== Legacy Methods (Backward Compatible) ==============
 
   async request(
     method: RequestOptions['method'],

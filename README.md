@@ -66,7 +66,15 @@ client.login();
 7. [Utilities](#utilities)
 8. [Voice](#voice)
 9. [Advanced Features](#advanced-features)
-10. [API Reference](#api-reference)
+    - [Smart Caching](#smart-caching)
+    - [Plugin System](#plugin-system)
+    - [Middleware](#middleware)
+    - [Decorators](#decorators)
+    - [Logging & Metrics](#logging--metrics)
+    - [Scheduler](#scheduler)
+    - [Audio Player](#audio-player)
+10. [CLI Tools](#cli-tools)
+11. [API Reference](#api-reference)
 
 ---
 
@@ -715,6 +723,245 @@ player.on('idle', () => console.log('Queue finished'));
 ---
 
 ## 🔥 Advanced Features
+
+### 🎯 Smart Caching
+
+WingetCord provides intelligent caching with multiple eviction policies:
+
+```typescript
+import { LRUCache, LFUCache, TTLCache, MemoryCache } from '@wingetcord/wingetcord';
+
+// LRU Cache (Least Recently Used)
+const lruCache = new LRUCache<string, any>({ maxSize: 1000 });
+
+// LFU Cache (Least Frequently Used)
+const lfuCache = new LFUCache<string, any>({ maxSize: 1000 });
+
+// TTL Cache (Time To Live)
+const ttlCache = new TTLCache<string, any>({ ttl: 60000 }); // 60 seconds
+
+// Use with RESTManager
+const client = new Client({
+    cache: new MemoryCache({
+        policies: [
+            { type: 'user', maxAge: 300000 },
+            { type: 'message', maxAge: 60000 },
+        ]
+    })
+});
+```
+
+### 🧩 Plugin System
+
+Create reusable, independent plugins with dependency management:
+
+```typescript
+import { Plugin, PluginState, PluginManager } from '@wingetcord/wingetcord';
+
+const myPlugin = Plugin.create({
+    name: 'my-plugin',
+    version: '1.0.0',
+    description: 'A sample plugin',
+    dependencies: ['database-plugin', 'logger-plugin']
+});
+
+myPlugin.onLoad(async (plugin) => {
+    console.log('Plugin loading...');
+    plugin.setState(PluginState.Loaded);
+});
+
+myPlugin.onUnload(async (plugin) => {
+    console.log('Plugin unloading...');
+});
+
+// Load plugins dynamically
+await pluginManager.load('./plugins/my-plugin');
+```
+
+### 🔄 Middleware System
+
+Advanced middleware with priority and error handling:
+
+```typescript
+import { MiddlewareManager, createRateLimiter, createLoggingMiddleware } from '@wingetcord/wingetcord';
+
+const middleware = new MiddlewareManager();
+
+// Rate limiting middleware
+middleware.use(createRateLimiter({
+    windowMs: 60000,
+    maxRequests: 100
+}), { priority: 10 });
+
+// Logging middleware
+middleware.use(createLoggingMiddleware(), { priority: 5 });
+
+// Custom middleware
+middleware.use(async (ctx, next) => {
+    console.log('Before request');
+    await next();
+    console.log('After request');
+}, { priority: 1 });
+```
+
+### 🎨 Decorators
+
+TypeScript decorators for elegant command and event handling:
+
+```typescript
+import { Command, Option, On, Once, Cooldown, Permissions } from '@wingetcord/wingetcord';
+
+@Command({
+    name: 'ban',
+    description: 'Ban a user'
+})
+@Permissions('BAN_MEMBERS')
+@Cooldown(1000) // 1 second cooldown
+@Option('user', { description: 'User to ban', required: true })
+@Option('reason', { description: 'Reason for ban' })
+export class BanCommand {
+    async execute(context: CommandContext) {
+        const user = context.getUser('user');
+        const reason = context.getString('reason') || 'No reason';
+        // Ban logic...
+    }
+}
+
+@On('ready')
+@Once('ready')
+export class ReadyHandler {
+    execute() {
+        console.log('Bot is ready!');
+    }
+}
+```
+
+### 📊 Logging & Metrics
+
+Professional logging with correlation IDs and real-time metrics:
+
+```typescript
+import { Logger, LogLevel, MetricsRegistry, Counter, Gauge, Histogram } from '@wingetcord/wingetcord';
+
+// Create logger with context
+const logger = new Logger({ 
+    name: 'my-bot',
+    level: LogLevel.Debug,
+    prettyPrint: true
+});
+
+logger.info('Bot started', { guilds: 10, users: 1000 });
+
+// Metrics
+const metrics = new MetricsRegistry();
+
+const commandCounter = metrics.createCounter({
+    name: 'commands_executed_total',
+    help: 'Total commands executed'
+});
+
+const commandLatency = metrics.createHistogram({
+    name: 'command_latency_seconds',
+    help: 'Command execution latency',
+    buckets: [0.1, 0.5, 1, 2, 5]
+});
+
+// Record metrics
+commandCounter.inc({ command: 'ping' });
+commandLatency.observe(0.125, { command: 'ban' });
+```
+
+### ⏰ Scheduler
+
+Cron-based and interval task scheduling:
+
+```typescript
+import { Scheduler, CronParser } from '@wingetcord/wingetcord';
+
+const scheduler = new Scheduler({ maxConcurrent: 5 });
+
+// Cron job - runs every day at midnight
+scheduler.scheduleCron('0 0 * * *', async (ctx) => {
+    console.log('Daily cleanup task');
+    // Cleanup logic...
+});
+
+// Interval task - runs every 5 minutes
+scheduler.scheduleInterval(300000, async (ctx) => {
+    console.log('Status update');
+});
+
+// One-time task - runs after 30 seconds
+scheduler.scheduleOnce(30000, async (ctx) => {
+    console.log('Delayed task');
+});
+
+// Start scheduler
+scheduler.startAll();
+```
+
+### 🎵 Audio Player
+
+Multi-channel audio queue with advanced features:
+
+```typescript
+import { AudioPlayer, AudioQueue } from '@wingetcord/wingetcord';
+
+const player = new AudioPlayer({ maxQueues: 10, defaultVolume: 100 });
+
+// Get or create queue for a voice channel
+const queue = player.getOrCreateQueue({
+    voiceChannelId: '123456789',
+    textChannelId: '987654321',
+    autoPlay: true
+});
+
+// Add tracks
+queue.addTrack({
+    id: 'track-1',
+    source: 'youtube',
+    url: 'https://youtube.com/watch?v=...',
+    title: 'My Song',
+    duration: 180,
+    requestedBy: 'user-123'
+});
+
+// Control playback
+queue.setVolume(80);
+queue.setRepeatMode('queue');
+player.skip('123456789');
+player.shuffle('123456789');
+
+// Events
+player.on('trackNext', (track, queue) => {
+    console.log('Now playing:', track.title);
+});
+```
+
+### 🖥️ CLI Tools
+
+Command-line tools for rapid development:
+
+```bash
+# Initialize a new project
+wingetcord init
+
+# Generate a command
+wingetcord make:command ping --description "Ping command"
+
+# Generate a plugin
+wingetcord make:plugin music --author "YourName"
+
+# Generate an event handler
+wingetcord make:event messageCreate
+
+# Generate middleware
+wingetcord make:middleware rateLimit
+```
+
+---
+
+## 📚 Examples
 
 ### Middleware System
 

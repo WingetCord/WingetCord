@@ -5,6 +5,9 @@
   "description": "A high-performance modular Discord framework written in TypeScript.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "wingetcord": "./dist/cli/index.js"
+  },
   "keywords": [
     "discord",
     "bot",

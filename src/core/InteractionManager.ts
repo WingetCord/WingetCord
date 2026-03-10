@@ -3,78 +3,82 @@ import type { Client } from './Client.js';
 import { Collector } from '../utils/Collector.js';
 import type { CollectorOptions } from '../utils/Collector.js';
 import { Logger } from './Logger.js';
-import { Interaction, CommandInteraction, ComponentInteraction, AutocompleteInteraction, ModalSubmitInteraction } from '../structures/Interaction.js';
+import {
+  Interaction,
+  CommandInteraction,
+  ComponentInteraction,
+  AutocompleteInteraction,
+  ModalSubmitInteraction,
+} from '../structures/Interaction.js';
 import { InteractionType } from '../utils/Enums.js';
 
-/**
- * InteractionManager: Handles Slash Commands and MESSAGE_COMPONENT interactions.
- */
 export class InteractionManager extends EventEmitter {
-  private collectors: Set<Collector<any>> = new Set();
-  private actionRegistry: Map<string, (interaction: any) => any> = new Map();
+  private collectors = new Set<Collector<unknown>>();
+  private actionRegistry = new Map<string, (interaction: unknown) => unknown>();
 
   constructor(private client: Client) {
     super();
-    this.client.on('INTERACTION_CREATE', (payload: any) => this.handleInteraction(payload));
-    
-    // Intercept outbound messages to register inline actions
-    this.client.on('raw', (event, data) => {
+    this.client.on('INTERACTION_CREATE', (payload: unknown) => this.handleInteraction(payload));
+
+    this.client.on('raw', (event: string, data: unknown) => {
       if (event === 'MESSAGE_CREATE' || event === 'INTERACTION_CREATE') {
-        this.scanForActions(data.components || data.data?.components);
+        const d = data as { components?: unknown[]; data?: { components?: unknown[] } };
+        const comps = d.components || d.data?.components;
+        if (comps) this.scanForActions(comps);
       }
     });
   }
 
-  private scanForActions(components: any[]) {
+  private scanForActions(components: unknown[]) {
     if (!components) return;
-    for (const row of components) {
-      if (row.type !== 1) continue; // ActionRow
+    for (const row of components as { type: number; components: { _action?: unknown; custom_id?: string }[] }[]) {
+      if (row.type !== 1) continue;
       for (const comp of row.components) {
         if (comp._action && comp.custom_id) {
-          this.registerAction(comp.custom_id, comp._action);
+          this.registerAction(comp.custom_id, comp._action as (interaction: unknown) => unknown);
         }
       }
     }
   }
 
-  /**
-   * Creates a dedicated collector for interactions.
-   */
-  createCollector<T = any>(options: CollectorOptions<T>): Collector<T> {
+  createCollector<T>(options: CollectorOptions<T>): Collector<T> {
     const collector = new Collector<T>(options);
-    this.collectors.add(collector);
-    
+    this.collectors.add(collector as Collector<unknown>);
+
     collector.once('end', () => {
-      this.collectors.delete(collector);
+      this.collectors.delete(collector as Collector<unknown>);
       collector.removeAllListeners();
     });
-    
+
     return collector;
   }
 
-  private async handleInteraction(payload: any) {
+  private async handleInteraction(payload: unknown) {
     try {
+      const p = payload as {
+        type: number;
+        id: string;
+        data?: { custom_id?: string };
+      };
       let interaction: Interaction;
 
-      if (payload.type === InteractionType.ApplicationCommand) {
-        interaction = new CommandInteraction(this.client, payload);
-      } else if (payload.type === InteractionType.MessageComponent) {
-        interaction = new ComponentInteraction(this.client, payload);
-      } else if (payload.type === InteractionType.ApplicationCommandAutocomplete) {
-        interaction = new AutocompleteInteraction(this.client, payload);
-      } else if (payload.type === InteractionType.ModalSubmit) {
-        interaction = new ModalSubmitInteraction(this.client, payload);
+      if (p.type === InteractionType.ApplicationCommand) {
+        interaction = new CommandInteraction(this.client, p);
+      } else if (p.type === InteractionType.MessageComponent) {
+        interaction = new ComponentInteraction(this.client, p);
+      } else if (p.type === InteractionType.ApplicationCommandAutocomplete) {
+        interaction = new AutocompleteInteraction(this.client, p);
+      } else if (p.type === InteractionType.ModalSubmit) {
+        interaction = new ModalSubmitInteraction(this.client, p);
       } else {
-        interaction = new Interaction(this.client, payload);
+        interaction = new Interaction(this.client, p);
       }
 
-      // 1. Check Collectors first
       for (const collector of this.collectors) {
-        const id = payload.data?.custom_id || payload.id;
+        const id = p.data?.custom_id || p.id;
         if (collector.handle(interaction, id)) return;
       }
 
-      // 1.5 Check Action Registry (Inline Callbacks)
       if (interaction instanceof ComponentInteraction) {
         const callback = this.actionRegistry.get(interaction.customId);
         if (callback) {
@@ -83,7 +87,6 @@ export class InteractionManager extends EventEmitter {
         }
       }
 
-      // 2. Handle Events
       if (interaction instanceof CommandInteraction) {
         this.emit('command', interaction);
       } else if (interaction instanceof ComponentInteraction) {
@@ -93,34 +96,25 @@ export class InteractionManager extends EventEmitter {
       } else if (interaction instanceof ModalSubmitInteraction) {
         this.emit('modal', interaction);
       }
-      
-      this.emit('interaction', interaction);
 
+      this.emit('interaction', interaction);
     } catch (err) {
       Logger.error('Error handling interaction:', err);
     }
   }
 
-  /**
-   * Helper to acknowledge interactions (Legacy/Raw)
-   */
-  async acknowledge(interactionId: string, token: string, type: number = 6) {
+  async acknowledge(interactionId: string, token: string, type = 6) {
     try {
-      await this.client.rest.request('POST', `/interactions/${interactionId}/${token}/callback`, {
-        type: type
-      });
+      await this.client.rest.request('POST', `/interactions/${interactionId}/${token}/callback`, { type });
     } catch (err) {
       Logger.error(`Failed to acknowledge interaction ${interactionId}`, err);
     }
   }
 
-  /**
-   * Sync Slash Commands with Discord
-   */
-  async syncCommands(commands: any[]) {
+  async syncCommands(commands: unknown[]) {
     Logger.info(`Syncing ${commands.length} slash commands...`);
     try {
-      const app = await this.client.rest.users.getMe();
+      const app = (await this.client.rest.users.getMe()) as { id: string };
       await this.client.rest.commands.createGlobalCommand(app.id, commands);
       Logger.info('Slash commands synced successfully.');
     } catch (err) {
@@ -128,12 +122,8 @@ export class InteractionManager extends EventEmitter {
     }
   }
 
-  /**
-   * Register an inline callback for a component.
-   */
-  registerAction(customId: string, callback: (interaction: any) => any, timeout: number = 300000) {
+  registerAction(customId: string, callback: (interaction: unknown) => unknown, timeout = 300000) {
     this.actionRegistry.set(customId, callback);
-    // Auto-cleanup after 5 minutes by default
     setTimeout(() => {
       this.actionRegistry.delete(customId);
     }, timeout);

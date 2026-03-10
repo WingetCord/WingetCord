@@ -1,6 +1,6 @@
 export abstract class Event {
-  constructor(public name: string, public once: boolean = false) {}
-  abstract execute(...args: any[]): Promise<void> | void;
+  constructor(public name: string, public once = false) {}
+  abstract execute(...args: unknown[]): void | Promise<void>;
 }
 
 import { readdirSync } from 'fs';
@@ -13,7 +13,7 @@ export class EventManager {
   constructor(private client: Client) {}
 
   register(event: Event) {
-    const handler = (...args: any[]) => event.execute(...args);
+    const handler = (...args: unknown[]) => event.execute(...args);
     if (event.once) {
       this.client.once(event.name, handler);
     } else {
@@ -28,22 +28,23 @@ export class EventManager {
         await this.load(join(directory, file.name));
         continue;
       }
-      if (file.name.endsWith('.ts') || file.name.endsWith('.js')) {
-        const filePath = join(directory, file.name);
-        if (filePath.includes('EventManager')) continue;
 
+      if (!file.name.endsWith('.ts') && !file.name.endsWith('.js')) continue;
+
+      const filePath = join(directory, file.name);
+      if (filePath.includes('EventManager')) continue;
+
+      try {
         const eventModule = await import(pathToFileURL(filePath).href);
         const EventClass = eventModule.default || Object.values(eventModule)[0];
         if (typeof EventClass === 'function') {
-          try {
-            const ev = new EventClass();
-            if (ev instanceof Event) {
-              this.register(ev);
-            }
-          } catch (e) {
-            // Ignore non-event classes
+          const ev = new EventClass();
+          if (ev instanceof Event) {
+            this.register(ev);
           }
         }
+      } catch {
+        // Ignore non-event classes
       }
     }
   }

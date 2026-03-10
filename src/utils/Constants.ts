@@ -3,7 +3,7 @@ export const Constants = {
   API_VERSION: 10,
   BASE_URL: 'https://discord.com/api/v10',
   GATEWAY_URL: 'wss://gateway.discord.gg/?v=10&encoding=json',
-  USER_AGENT: 'WingetCord (https://github.com/user/wingetcord, 1.0.0)',
+  USER_AGENT: 'WingetCord (https://github.com/wingetcord/wingetcord, 1.0.0)',
 };
 
 export enum IntentBits {

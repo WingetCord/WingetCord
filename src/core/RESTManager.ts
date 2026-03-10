@@ -17,28 +17,28 @@ import type { Client } from './Client.js';
 export interface RequestOptions {
   method: 'GET' | 'POST' | 'PATCH' | 'DELETE' | 'PUT';
   endpoint: string;
-  body?: any;
+  body?: unknown;
   retries?: number;
   useCache?: boolean;
 }
 
 export class RESTManager {
   private pool: Pool;
-  private rateLimits: Map<string, RateLimitData> = new Map();
-  private queue: Map<string, Promise<any>> = new Map();
-  private MAX_RETRIES = 3;
+  private rateLimits = new Map<string, RateLimitData>();
+  private queue = new Map<string, Promise<unknown>>();
+  private readonly MAX_RETRIES = 3;
   private fastPath = false;
 
-  public users: UsersHandler;
-  public guilds: GuildsHandler;
-  public channels: ChannelsHandler;
-  public webhooks: WebhooksHandler;
-  public commands: CommandsHandler;
-  public auditLogs: AuditLogsHandler;
-  public autoMod: AutoModHandler;
-  public scheduledEvents: ScheduledEventsHandler;
-  public stickers: StickerHandler;
-  public emojis: EmojiHandler;
+  users: UsersHandler;
+  guilds: GuildsHandler;
+  channels: ChannelsHandler;
+  webhooks: WebhooksHandler;
+  commands: CommandsHandler;
+  auditLogs: AuditLogsHandler;
+  autoMod: AutoModHandler;
+  scheduledEvents: ScheduledEventsHandler;
+  stickers: StickerHandler;
+  emojis: EmojiHandler;
 
   constructor(private client: Client) {
     this.pool = new Pool(Constants.BASE_URL.replace('/api/v10', ''));
@@ -70,17 +70,20 @@ export class RESTManager {
     return route || '/';
   }
 
-  async request(method: RequestOptions['method'], endpoint: string, body?: any, options: Partial<RequestOptions> = {}): Promise<any> {
+  async request(
+    method: RequestOptions['method'],
+    endpoint: string,
+    body?: unknown,
+    options: Partial<RequestOptions> = {}
+  ): Promise<unknown> {
     const route = this.getRoute(endpoint);
-    const useCache = options.useCache ?? (method === 'GET');
+    const useCache = options.useCache ?? method === 'GET';
 
-    // 1. Check Cache for GET requests
     if (useCache && method === 'GET') {
       const cached = this.checkCache(endpoint);
       if (cached) return cached;
     }
 
-    // 2. Queue management (Failure resilient)
     if (this.fastPath && method === 'GET') {
       return this.execute(method, endpoint, body, options.retries || 0);
     }
@@ -89,7 +92,7 @@ export class RESTManager {
     const nextRequest = (async () => {
       try {
         await currentQueue;
-      } catch (e) {
+      } catch {
         // Proceed even if previous request failed
       }
       return this.execute(method, endpoint, body, options.retries || 0);
@@ -98,7 +101,6 @@ export class RESTManager {
     this.queue.set(route, nextRequest);
     const result = await nextRequest;
 
-    // 3. Update Cache on Success
     if (result) {
       this.updateCache(method, endpoint, result);
     }
@@ -106,27 +108,24 @@ export class RESTManager {
     return result;
   }
 
-  /**
-   * Enable/Disable High-Throughput mode (Skip queue for GET requests)
-   */
   setFastPath(enabled: boolean) {
     this.fastPath = enabled;
   }
 
-  private async execute(method: string, endpoint: string, body?: any, retries = 0): Promise<any> {
+  private async execute(method: string, endpoint: string, body?: unknown, retries = 0): Promise<unknown> {
     const route = this.getRoute(endpoint);
     const rl = this.rateLimits.get(route);
 
     if (rl && rl.remaining === 0 && Date.now() < rl.reset) {
       const wait = rl.reset - Date.now();
       Logger.warn(`Rate limit on ${route}, waiting ${wait}ms`);
-      await new Promise(r => setTimeout(r, wait));
+      await new Promise((r) => setTimeout(r, wait));
     }
 
     try {
       const res = await this.pool.request({
         path: `/api/v10${endpoint}`,
-        method: method as any,
+        method: method as 'GET' | 'POST' | 'PATCH' | 'DELETE' | 'PUT',
         headers: {
           Authorization: `Bot ${this.client.token}`,
           'Content-Type': 'application/json',
@@ -135,42 +134,43 @@ export class RESTManager {
         body: body ? JSON.stringify(body) : null,
       });
 
-      // Update Rate Limits
-      this.updateRateLimits(route, res.headers);
+      this.updateRateLimits(route, res.headers as Record<string, string>);
 
       if (res.statusCode === 429) {
-        const data = await res.body.json() as any;
-        const retryAfter = (data.retry_after * 1000) || 5000;
+        const data = (await res.body.json()) as { retry_after?: number };
+        const retryAfter = (data.retry_after! * 1000) || 5000;
         Logger.error(`Rate Limit Hit [${route}]! Retry after ${retryAfter}ms`);
-        await new Promise(r => setTimeout(r, retryAfter));
+        await new Promise((r) => setTimeout(r, retryAfter));
         return this.execute(method, endpoint, body, retries);
       }
 
-      const responseBody = await res.body.json() as any;
+      const responseBody = await res.body.json();
 
       if (res.statusCode >= 400) {
         if (res.statusCode >= 500 && retries < this.MAX_RETRIES) {
           const backoff = Math.pow(2, retries) * 1000;
           Logger.warn(`Server error ${res.statusCode} on ${endpoint}, retrying in ${backoff}ms...`);
-          await new Promise(r => setTimeout(r, backoff));
+          await new Promise((r) => setTimeout(r, backoff));
           return this.execute(method, endpoint, body, retries + 1);
         }
-        throw new Error(`Discord API Error [${res.statusCode}]: ${responseBody.message} (${responseBody.code})`);
+        const err = responseBody as { message: string; code: number };
+        throw new Error(`Discord API Error [${res.statusCode}]: ${err.message} (${err.code})`);
       }
 
       return responseBody;
-    } catch (err: any) {
+    } catch (err) {
       if (retries < this.MAX_RETRIES) {
         const backoff = Math.pow(2, retries) * 1000;
-        Logger.warn(`Request to ${endpoint} failed (${err.message}), retrying in ${backoff}ms...`);
-        await new Promise(r => setTimeout(r, backoff));
+        const e = err as Error;
+        Logger.warn(`Request to ${endpoint} failed (${e.message}), retrying in ${backoff}ms...`);
+        await new Promise((r) => setTimeout(r, backoff));
         return this.execute(method, endpoint, body, retries + 1);
       }
       throw err;
     }
   }
 
-  private updateRateLimits(route: string, headers: any) {
+  private updateRateLimits(route: string, headers: Record<string, string>) {
     const limit = Number(headers['x-ratelimit-limit']);
     const remaining = Number(headers['x-ratelimit-remaining']);
     const reset = Number(headers['x-ratelimit-reset']) * 1000;
@@ -181,12 +181,12 @@ export class RESTManager {
         remaining,
         reset,
         after: reset - Date.now(),
-        bucket: (headers['x-ratelimit-bucket'] as string) || route,
+        bucket: headers['x-ratelimit-bucket'] || route,
       });
     }
   }
 
-  private checkCache(endpoint: string): any {
+  private checkCache(endpoint: string): unknown {
     if (endpoint.startsWith('/guilds/')) {
       const parts = endpoint.split('/');
       if (parts.length === 3) return this.client.cache.guilds.get(parts[2]!);
@@ -194,17 +194,21 @@ export class RESTManager {
     return null;
   }
 
-  private updateCache(method: string, endpoint: string, data: any) {
+  private updateCache(method: string, endpoint: string, data: unknown) {
     if (method === 'GET') {
       if (endpoint.startsWith('/guilds/') && endpoint.split('/').length === 3) {
-        this.client.cache.guilds.set(data.id, data);
+        const d = data as { id: string };
+        this.client.cache.guilds.set(d.id, d as never);
       }
     } else if (['POST', 'PATCH', 'DELETE'].includes(method)) {
       if (endpoint.startsWith('/guilds/')) {
         const guildId = endpoint.split('/')[2];
         if (guildId) {
           if (method === 'DELETE') this.client.cache.invalidateGuild(guildId);
-          else if (method === 'PATCH' && endpoint.split('/').length === 3) this.client.cache.guilds.set(guildId, data);
+          else if (method === 'PATCH' && endpoint.split('/').length === 3) {
+            const d = data as Record<string, unknown>;
+            this.client.cache.guilds.set(guildId, d as never);
+          }
         }
       }
     }

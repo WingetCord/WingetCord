@@ -16,23 +16,25 @@ import { Message } from '../structures/Message.js';
 import { User } from '../structures/User.js';
 
 export class Client extends EventEmitter {
-  public token: string;
-  public rest: RESTManager;
-  public gateway: GatewayManager;
-  public cache: CacheManager;
-  public commands: CommandManager;
-  public events: EventManager;
-  public plugins: PluginManager;
-  public interactions: InteractionManager;
-  public handler: HandlerManager;
-  public voice: VoiceManager;
-  public store: any;
+  public readonly token: string;
+  public readonly rest: RESTManager;
+  public readonly gateway: GatewayManager;
+  public readonly cache: CacheManager;
+  public readonly commands: CommandManager;
+  public readonly events: EventManager;
+  public readonly plugins: PluginManager;
+  public readonly interactions: InteractionManager;
+  public readonly handler: HandlerManager;
+  public readonly voice: VoiceManager;
+  public readonly store: unknown;
   public user: User | null = null;
+
+  private readonly middlewares: ((ctx: unknown, next: () => Promise<void>) => unknown)[] = [];
 
   constructor(options: ClientOptions) {
     super();
     this.token = options.token;
-    
+
     let intentValue = 0;
     if (Array.isArray(options.intents)) {
       for (const intent of options.intents) {
@@ -53,74 +55,52 @@ export class Client extends EventEmitter {
     this.voice = new VoiceManager(this);
     this.store = new ReactiveStore().state;
 
-    this.gateway.on('dispatch', (event: string, data: any) => {
+    this.gateway.on('dispatch', (event: string, data: unknown) => {
       this.handleEvent(event, data);
     });
   }
 
-  /**
-   * High-level shortcut to send a message to a channel.
-   */
-  public async say(channelId: string, content: string | any) {
+  say(channelId: string, content: string | unknown) {
     return this.rest.channels.sendMessage(channelId, typeof content === 'string' ? { content } : content);
   }
 
-  /**
-   * Fluent listener for MESSAGE_CREATE events.
-   */
-  public onMessage(callback: (message: any) => any) {
+  onMessage(callback: (message: unknown) => unknown): this {
     this.on('MESSAGE_CREATE', callback);
     return this;
   }
 
-  /**
-   * Fluent listener for INTERACTION_CREATE events.
-   */
-  public onInteraction(callback: (interaction: any) => any) {
+  onInteraction(callback: (interaction: unknown) => unknown): this {
     this.on('interaction', callback);
     return this;
   }
 
-  /**
-   * Fluent listener for READY event.
-   */
-  public onReady(callback: (user: any) => any) {
+  onReady(callback: (user: User) => unknown): this {
     this.on('READY', callback);
     return this;
   }
 
-  /**
-   * Get an instant health report of the bot.
-   */
-  public pulse() {
+  pulse() {
     return {
       status: this.gateway.status,
       ping: this.gateway.ping,
       uptime: process.uptime(),
       memory: process.memoryUsage().heapUsed / 1024 / 1024,
-      guilds: this.cache.guilds.size
+      guilds: this.cache.guilds.size,
     };
   }
 
-  private middlewares: ((ctx: any, next: () => Promise<void>) => any)[] = [];
-
-  /**
-   * Add middleware to the client flow.
-   */
-  public use(middleware: (ctx: any, next: () => Promise<void>) => any) {
+  use(middleware: (ctx: unknown, next: () => Promise<void>) => unknown): this {
     this.middlewares.push(middleware);
     return this;
   }
 
-  public async login() {
+  async login() {
     try {
       const rawUser = await this.rest.request('GET', '/users/@me');
       this.user = new User(this, rawUser);
       Logger.info(`Logged in as ${this.user.username}`);
-      
-      // Auto-sync slash commands
-      await this.commands.syncSlashCommands();
 
+      await this.commands.syncSlashCommands();
       this.gateway.connect();
     } catch (error) {
       Logger.error('Failed to login:', error);
@@ -128,25 +108,25 @@ export class Client extends EventEmitter {
     }
   }
 
-  private async handleEvent(event: string, data: any) {
+  private async handleEvent(event: string, data: unknown) {
     const ctx = { client: this, event, data, timestamp: Date.now() };
-    
+
     let index = 0;
     const next = async () => {
       if (index < this.middlewares.length) {
         const middleware = this.middlewares[index++];
         if (middleware) await middleware(ctx, next);
       } else {
-        let interactionData = data;
+        let eventData = data;
         if (event === 'MESSAGE_CREATE') {
-          interactionData = new Message(this, data);
+          eventData = new Message(this, data as Record<string, unknown>);
         }
-        
-        this.emit(event, interactionData);
+
+        this.emit(event, eventData);
         this.emit('raw', event, data);
       }
     };
 
-    await next().catch(err => Logger.error(`Middleware error on ${event}:`, err));
+    await next().catch((err) => Logger.error(`Middleware error on ${event}:`, err));
   }
 }

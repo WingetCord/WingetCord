@@ -12,6 +12,8 @@ import { InteractionManager } from './InteractionManager.js';
 import { VoiceManager } from '../voice/VoiceManager.js';
 import { ReactiveStore } from '../utils/ReactiveStore.js';
 import { HandlerManager } from './HandlerManager.js';
+import { Message } from '../structures/Message.js';
+import { User } from '../structures/User.js';
 
 export class Client extends EventEmitter {
   public token: string;
@@ -25,7 +27,7 @@ export class Client extends EventEmitter {
   public handler: HandlerManager;
   public voice: VoiceManager;
   public store: any;
-  public user: any = null;
+  public user: User | null = null;
 
   constructor(options: ClientOptions) {
     super();
@@ -112,7 +114,8 @@ export class Client extends EventEmitter {
 
   public async login() {
     try {
-      this.user = await this.rest.request('GET', '/users/@me');
+      const rawUser = await this.rest.request('GET', '/users/@me');
+      this.user = new User(this, rawUser);
       Logger.info(`Logged in as ${this.user.username}`);
       
       // Auto-sync slash commands
@@ -134,7 +137,12 @@ export class Client extends EventEmitter {
         const middleware = this.middlewares[index++];
         if (middleware) await middleware(ctx, next);
       } else {
-        this.emit(event, data);
+        let interactionData = data;
+        if (event === 'MESSAGE_CREATE') {
+          interactionData = new Message(this, data);
+        }
+        
+        this.emit(event, interactionData);
         this.emit('raw', event, data);
       }
     };

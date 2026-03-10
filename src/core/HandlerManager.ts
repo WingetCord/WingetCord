@@ -6,6 +6,11 @@ import { Logger } from './Logger.js';
 import { Command } from './CommandManager.js';
 import { Event } from './EventManager.js';
 
+export abstract class InteractionHandler {
+  abstract customId: string;
+  abstract execute(interaction: any): Promise<void> | void;
+}
+
 export interface HandlerOptions {
   commands?: string;
   events?: string;
@@ -31,9 +36,13 @@ export class HandlerManager {
       Logger.info(`Scanning events in: ${options.events}`);
       await this.loadDirectory(options.events, 'event');
     }
+    if (options.interactions) {
+      Logger.info(`Scanning interactions in: ${options.interactions}`);
+      await this.loadDirectory(options.interactions, 'interaction');
+    }
   }
 
-  private async loadDirectory(dir: string, type: 'command' | 'event') {
+  private async loadDirectory(dir: string, type: 'command' | 'event' | 'interaction') {
     const files = readdirSync(dir);
 
     for (const file of files) {
@@ -61,6 +70,9 @@ export class HandlerManager {
         } else if (type === 'event' && instance instanceof Event) {
           this.client.events.register(instance);
           Logger.debug(`[Handler] Registered event: ${instance.name}`);
+        } else if (type === 'interaction' && instance instanceof InteractionHandler) {
+          this.client.interactions.registerAction(instance.customId, (i) => instance.execute(i));
+          Logger.debug(`[Handler] Registered interaction handler: ${instance.customId}`);
         }
       } catch (err) {
         Logger.error(`[Handler] Failed to load ${file}:`, err);

@@ -2,7 +2,7 @@
   "name": "@wingetcord/wingetcord",
   "version": "1.0.0",
   "type": "module",
-  "description": "A high-performance, modular Discord framework in TypeScript. Closed-source, private package.",
+  "description": "A high-performance modular Discord framework written in TypeScript.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "keywords": [
@@ -13,7 +13,7 @@
     "wingetcord"
   ],
   "author": "Mr.Winget",
-  "license": "SEE LICENSE IN LICENSE.md",
+  "license": "MIT",
   "private": false,
   "publishConfig": {
     "access": "public"

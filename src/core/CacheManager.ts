@@ -33,10 +33,11 @@ export class Cache<T> extends Map<string, T> {
   }
 }
 
-export interface Guild { id: string; name: string; [key: string]: any }
+import { Guild } from '../structures/Guild.js';
+import { Member } from '../structures/Member.js';
+import { Role } from '../structures/Role.js';
+
 export interface Channel { id: string; name: string; type: number; [key: string]: any }
-export interface Member { user: { id: string }; roles: string[]; [key: string]: any }
-export interface Role { id: string; name: string; [key: string]: any }
 export interface Emoji { id: string; name: string; [key: string]: any }
 
 export class CacheManager {
@@ -53,7 +54,7 @@ export class CacheManager {
 
   setMember(guildId: string, member: Member) {
     if (!this.members.has(guildId)) this.members.set(guildId, new Cache<Member>(1000));
-    this.members.get(guildId)!.set(member.user.id, member);
+    this.members.get(guildId)!.set(member.user!.id, member);
   }
 
   invalidateGuild(guildId: string) {

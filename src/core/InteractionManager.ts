@@ -3,7 +3,8 @@ import type { Client } from './Client.js';
 import { Collector } from '../utils/Collector.js';
 import type { CollectorOptions } from '../utils/Collector.js';
 import { Logger } from './Logger.js';
-import { Interaction, CommandInteraction, ComponentInteraction } from '../structures/Interaction.js';
+import { Interaction, CommandInteraction, ComponentInteraction, AutocompleteInteraction, ModalSubmitInteraction } from '../structures/Interaction.js';
+import { InteractionType } from '../utils/Enums.js';
 
 /**
  * InteractionManager: Handles Slash Commands and MESSAGE_COMPONENT interactions.
@@ -55,10 +56,14 @@ export class InteractionManager extends EventEmitter {
     try {
       let interaction: Interaction;
 
-      if (payload.type === 2) {
+      if (payload.type === InteractionType.ApplicationCommand) {
         interaction = new CommandInteraction(this.client, payload);
-      } else if (payload.type === 3) {
+      } else if (payload.type === InteractionType.MessageComponent) {
         interaction = new ComponentInteraction(this.client, payload);
+      } else if (payload.type === InteractionType.ApplicationCommandAutocomplete) {
+        interaction = new AutocompleteInteraction(this.client, payload);
+      } else if (payload.type === InteractionType.ModalSubmit) {
+        interaction = new ModalSubmitInteraction(this.client, payload);
       } else {
         interaction = new Interaction(this.client, payload);
       }
@@ -83,6 +88,10 @@ export class InteractionManager extends EventEmitter {
         this.emit('command', interaction);
       } else if (interaction instanceof ComponentInteraction) {
         this.emit('component', interaction);
+      } else if (interaction instanceof AutocompleteInteraction) {
+        this.emit('autocomplete', interaction);
+      } else if (interaction instanceof ModalSubmitInteraction) {
+        this.emit('modal', interaction);
       }
       
       this.emit('interaction', interaction);

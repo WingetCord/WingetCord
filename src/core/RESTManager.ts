@@ -7,6 +7,11 @@ import { GuildsHandler } from '../rest/GuildsHandler.js';
 import { ChannelsHandler } from '../rest/ChannelsHandler.js';
 import { WebhooksHandler } from '../rest/WebhooksHandler.js';
 import { CommandsHandler } from '../rest/CommandsHandler.js';
+import { AuditLogsHandler } from '../rest/AuditLogsHandler.js';
+import { AutoModHandler } from '../rest/AutoModHandler.js';
+import { ScheduledEventsHandler } from '../rest/ScheduledEventsHandler.js';
+import { StickerHandler } from '../rest/StickerHandler.js';
+import { EmojiHandler } from '../rest/EmojiHandler.js';
 import type { Client } from './Client.js';
 
 export interface RequestOptions {
@@ -29,6 +34,11 @@ export class RESTManager {
   public channels: ChannelsHandler;
   public webhooks: WebhooksHandler;
   public commands: CommandsHandler;
+  public auditLogs: AuditLogsHandler;
+  public autoMod: AutoModHandler;
+  public scheduledEvents: ScheduledEventsHandler;
+  public stickers: StickerHandler;
+  public emojis: EmojiHandler;
 
   constructor(private client: Client) {
     this.pool = new Pool(Constants.BASE_URL.replace('/api/v10', ''));
@@ -38,6 +48,11 @@ export class RESTManager {
     this.channels = new ChannelsHandler(this);
     this.webhooks = new WebhooksHandler(this);
     this.commands = new CommandsHandler(this);
+    this.auditLogs = new AuditLogsHandler(this);
+    this.autoMod = new AutoModHandler(this);
+    this.scheduledEvents = new ScheduledEventsHandler(this);
+    this.stickers = new StickerHandler(this);
+    this.emojis = new EmojiHandler(this);
   }
 
   private getRoute(endpoint: string): string {
@@ -144,10 +159,10 @@ export class RESTManager {
       }
 
       return responseBody;
-    } catch (err) {
+    } catch (err: any) {
       if (retries < this.MAX_RETRIES) {
         const backoff = Math.pow(2, retries) * 1000;
-        Logger.warn(`Request to ${endpoint} failed, retrying in ${backoff}ms...`);
+        Logger.warn(`Request to ${endpoint} failed (${err.message}), retrying in ${backoff}ms...`);
         await new Promise(r => setTimeout(r, backoff));
         return this.execute(method, endpoint, body, retries + 1);
       }

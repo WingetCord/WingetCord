@@ -1,0 +1,235 @@
+/**
+ * Exhaustive Discord Enums for WingetCord.
+ * Based on Discord API v10.
+ */
+
+export enum ChannelType {
+  GuildText = 0,
+  DM = 1,
+  GuildVoice = 2,
+  GroupDM = 3,
+  GuildCategory = 4,
+  GuildAnnouncement = 5,
+  AnnouncementThread = 10,
+  PublicThread = 11,
+  PrivateThread = 12,
+  GuildStageVoice = 13,
+  GuildDirectory = 14,
+  GuildForum = 15,
+}
+
+export enum ActivityType {
+  Playing = 0,
+  Streaming = 1,
+  Listening = 2,
+  Watching = 3,
+  Custom = 4,
+  Competing = 5,
+}
+
+export enum InteractionType {
+  Ping = 1,
+  ApplicationCommand = 2,
+  MessageComponent = 3,
+  ApplicationCommandAutocomplete = 4,
+  ModalSubmit = 5,
+}
+
+export enum ComponentType {
+  ActionRow = 1,
+  Button = 2,
+  StringSelect = 3,
+  TextInput = 4,
+  UserSelect = 5,
+  RoleSelect = 6,
+  MentionableSelect = 7,
+  ChannelSelect = 8,
+}
+
+export enum ButtonStyle {
+  Primary = 1,
+  Secondary = 2,
+  Success = 3,
+  Danger = 4,
+  Link = 5,
+}
+
+export enum TextInputStyle {
+  Short = 1,
+  Paragraph = 2,
+}
+
+export enum InteractionResponseType {
+  Pong = 1,
+  ChannelMessageWithSource = 4,
+  DeferredChannelMessageWithSource = 5,
+  DeferredUpdateMessage = 6,
+  UpdateMessage = 7,
+  ApplicationCommandAutocompleteResult = 8,
+  Modal = 9,
+}
+
+export enum ApplicationCommandType {
+  ChatInput = 1,
+  User = 2,
+  Message = 3,
+}
+
+export enum ApplicationCommandOptionType {
+  SubCommand = 1,
+  SubCommandGroup = 2,
+  String = 3,
+  Integer = 4,
+  Boolean = 5,
+  User = 6,
+  Channel = 7,
+  Role = 8,
+  Mentionable = 9,
+  Number = 10,
+  Attachment = 11,
+}
+
+export enum MessageType {
+  Default = 0,
+  RecipientAdd = 1,
+  RecipientRemove = 2,
+  Call = 3,
+  ChannelNameChange = 4,
+  ChannelIconChange = 5,
+  ChannelPinnedMessage = 6,
+  UserJoin = 7,
+  GuildBoost = 8,
+  GuildBoostTier1 = 9,
+  GuildBoostTier2 = 10,
+  GuildBoostTier3 = 11,
+  ChannelFollowAdd = 12,
+  GuildDiscoveryDisqualified = 14,
+  GuildDiscoveryRequalified = 15,
+  GuildDiscoveryGracePeriodInitialWarning = 16,
+  GuildDiscoveryGracePeriodFinalWarning = 17,
+  ThreadCreated = 18,
+  Reply = 19,
+  ChatInputCommand = 20,
+  ThreadStarterMessage = 21,
+  GuildInviteReminder = 22,
+  ContextMenuCommand = 23,
+  AutoModerationAction = 24,
+}
+
+export const PermissionFlags = {
+  CreateInstantInvite: 1n << 0n,
+  KickMembers: 1n << 1n,
+  BanMembers: 1n << 2n,
+  Administrator: 1n << 3n,
+  ManageChannels: 1n << 4n,
+  ManageGuild: 1n << 5n,
+  AddReactions: 1n << 6n,
+  ViewAuditLog: 1n << 7n,
+  PrioritySpeaker: 1n << 8n,
+  Stream: 1n << 9n,
+  ViewChannel: 1n << 10n,
+  SendMessages: 1n << 11n,
+  SendTTSMessages: 1n << 12n,
+  ManageMessages: 1n << 13n,
+  EmbedLinks: 1n << 14n,
+  AttachFiles: 1n << 15n,
+  ReadMessageHistory: 1n << 16n,
+  MentionEveryone: 1n << 17n,
+  UseExternalEmojis: 1n << 18n,
+  ViewGuildInsights: 1n << 19n,
+  Connect: 1n << 20n,
+  Speak: 1n << 21n,
+  MuteMembers: 1n << 22n,
+  DeafenMembers: 1n << 23n,
+  MoveMembers: 1n << 24n,
+  UseVAD: 1n << 25n,
+  ChangeNickname: 1n << 26n,
+  ManageNicknames: 1n << 27n,
+  ManageRoles: 1n << 28n,
+  ManageWebhooks: 1n << 29n,
+  ManageEmojisAndStickers: 1n << 30n,
+  UseApplicationCommands: 1n << 31n,
+  RequestToSpeak: 1n << 32n,
+  ManageEvents: 1n << 33n,
+  ManageThreads: 1n << 34n,
+  CreatePublicThreads: 1n << 35n,
+  CreatePrivateThreads: 1n << 36n,
+  UseExternalStickers: 1n << 37n,
+  SendMessagesInThreads: 1n << 38n,
+  UseEmbeddedActivities: 1n << 39n,
+  ModerateMembers: 1n << 40n,
+  ViewCreatorMonetizationAnalytics: 1n << 41n,
+  UseSoundboard: 1n << 42n,
+  UseExternalSounds: 1n << 45n,
+  SendVoiceMessages: 1n << 46n,
+} as const;
+
+export enum AuditLogEvent {
+  GuildUpdate = 1,
+  ChannelCreate = 10,
+  ChannelUpdate = 11,
+  ChannelDelete = 12,
+  ChannelOverwriteCreate = 13,
+  ChannelOverwriteUpdate = 14,
+  ChannelOverwriteDelete = 15,
+  MemberKick = 20,
+  MemberPrune = 21,
+  MemberBanAdd = 22,
+  MemberBanRemove = 23,
+  MemberUpdate = 24,
+  MemberRoleUpdate = 25,
+  MemberMove = 26,
+  MemberDisconnect = 27,
+  BotAdd = 28,
+  RoleCreate = 30,
+  RoleUpdate = 31,
+  RoleDelete = 32,
+  InviteCreate = 40,
+  InviteUpdate = 41,
+  InviteDelete = 42,
+  WebhookCreate = 50,
+  WebhookUpdate = 51,
+  WebhookDelete = 52,
+  EmojiCreate = 60,
+  EmojiUpdate = 61,
+  EmojiDelete = 62,
+  MessageDelete = 72,
+  MessageBulkDelete = 73,
+  MessagePin = 74,
+  MessageUnpin = 75,
+  IntegrationCreate = 80,
+  IntegrationUpdate = 81,
+  IntegrationDelete = 82,
+  StageInstanceCreate = 83,
+  StageInstanceUpdate = 84,
+  StageInstanceDelete = 85,
+  StickerCreate = 90,
+  StickerUpdate = 91,
+  StickerDelete = 92,
+  GuildScheduledEventCreate = 100,
+  GuildScheduledEventUpdate = 101,
+  GuildScheduledEventDelete = 102,
+  ThreadCreate = 110,
+  ThreadUpdate = 111,
+  ThreadDelete = 112,
+  ApplicationCommandPermissionUpdate = 121,
+  AutoModerationRuleCreate = 140,
+  AutoModerationRuleUpdate = 141,
+  AutoModerationRuleDelete = 142,
+  AutoModerationBlockMessage = 143,
+  AutoModerationFlagToChannel = 144,
+  AutoModerationUserCommunicationDisabled = 145,
+}
+
+export enum AutoModerationRuleTriggerType {
+  Keyword = 1,
+  Spam = 3,
+  KeywordPreset = 4,
+  MentionSpam = 5,
+}
+
+export enum AutoModerationActionType {
+  BlockMessage = 1,
+  SendAlertMessage = 2,
+  Timeout = 3,
+}

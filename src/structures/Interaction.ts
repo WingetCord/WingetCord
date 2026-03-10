@@ -47,14 +47,14 @@ export class Interaction {
    */
   async editReply(options: any) {
     const body = typeof options === 'string' ? { content: options } : options;
-    return this.client.rest.request('PATCH', `/webhooks/${this.client.user.id}/${this.token}/messages/@original`, body);
+    return this.client.rest.request('PATCH', `/webhooks/${this.client.user!.id}/${this.token}/messages/@original`, body);
   }
 
   /**
    * Delete the original response.
    */
   async deleteReply() {
-    return this.client.rest.request('DELETE', `/webhooks/${this.client.user.id}/${this.token}/messages/@original`);
+    return this.client.rest.request('DELETE', `/webhooks/${this.client.user!.id}/${this.token}/messages/@original`);
   }
 
   /**
@@ -62,7 +62,7 @@ export class Interaction {
    */
   async followUp(options: any) {
     const body = typeof options === 'string' ? { content: options } : options;
-    return this.client.rest.request('POST', `/webhooks/${this.client.user.id}/${this.token}`, body);
+    return this.client.rest.request('POST', `/webhooks/${this.client.user!.id}/${this.token}`, body);
   }
 
   /**
@@ -117,5 +117,48 @@ export class ComponentInteraction extends Interaction {
     return this.client.rest.request('POST', `/interactions/${this.id}/${this.token}/callback`, {
       type: 6 // DEFERRED_UPDATE_MESSAGE
     });
+  }
+}
+export class AutocompleteInteraction extends Interaction {
+  public commandName: string;
+  public options: any[];
+
+  constructor(client: Client, payload: any) {
+    super(client, payload);
+    this.commandName = payload.data.name;
+    this.options = payload.data.options || [];
+  }
+
+  /**
+   * Respond with autocomplete suggestions.
+   */
+  async respond(choices: { name: string; value: string | number }[]) {
+    return this.client.rest.request('POST', `/interactions/${this.id}/${this.token}/callback`, {
+      type: 8, // APPLICATION_COMMAND_AUTOCOMPLETE_RESULT
+      data: { choices }
+    });
+  }
+}
+
+export class ModalSubmitInteraction extends Interaction {
+  public customId: string;
+  public components: any[];
+
+  constructor(client: Client, payload: any) {
+    super(client, payload);
+    this.customId = payload.data.custom_id;
+    this.components = payload.data.components || [];
+  }
+
+  /**
+   * Get a field value by its custom ID.
+   */
+  getFieldValue(customId: string): string | null {
+    for (const row of this.components) {
+      for (const component of row.components) {
+        if (component.custom_id === customId) return component.value;
+      }
+    }
+    return null;
   }
 }

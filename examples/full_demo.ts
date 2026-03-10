@@ -79,7 +79,7 @@ client.on('MESSAGE_CREATE', async (msg: any) => {
 // --- 4. Slash Command Interaction Handling ---
 client.interactions.on('command', async (interaction: any) => {
   // Always acknowledge within 3s
-  await client.interactions.acknowledge(interaction, 4);
+  await client.interactions.acknowledge(interaction.id, interaction.token, 4);
 
   if (interaction.data.name === 'hello') {
     await client.rest.request('POST', `/interactions/${interaction.id}/${interaction.token}/callback`, {

@@ -16,6 +16,8 @@ export interface ShardOptions {
  */
 export class GatewayManager extends EventEmitter {
   private ws?: WebSocket;
+  private token: string;
+  private intents: number;
   private shard?: ShardOptions;
   
   public status: 'CONNECTED' | 'CONNECTING' | 'DISCONNECTED' | 'RECONNECTING' = 'DISCONNECTED';

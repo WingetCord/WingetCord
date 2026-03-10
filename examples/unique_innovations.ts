@@ -15,7 +15,7 @@ client.use(async (ctx, next) => {
 });
 
 // 2. Unique Feature: Reactive Store
-client.on('READY', (user) => {
+client.onReady((user) => {
     client.store.botStartedAt = Date.now();
     client.store.commandCount = 0;
     console.log(`🚀 Store initialized. Bot started at: ${client.store.botStartedAt}`);
@@ -24,7 +24,7 @@ client.on('READY', (user) => {
 // Listen for store changes reactively (Internal emitter exposed via Proxies isn't direct, but we can wrap it)
 // For this demo, we'll just show usage in commands.
 
-client.on('MESSAGE_CREATE', async (message) => {
+client.onMessage(async (message) => {
     if (message.content === '!stats') {
         await client.rest.channels.sendMessage(message.channel_id, {
             content: `📊 **Bot Stats**\n- Started: <t:${Math.floor(client.store.botStartedAt / 1000)}:R>\n- Commands Processed: ${client.store.commandCount}`

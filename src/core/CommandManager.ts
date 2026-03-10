@@ -41,6 +41,40 @@ export class CommandManager {
     }
   }
 
+  /**
+   * Automatically diff localized commands with Discord and sync if needed.
+   */
+  async syncSlashCommands() {
+    Logger.info('Analyzing slash commands for auto-sync...');
+    try {
+      const app = await this.client.rest.users.getMe();
+      const remoteCommands = await this.client.rest.request('GET', `/applications/${app.id}/commands`);
+      
+      const localCommandsData = Array.from(this.commands.values()).map(cmd => ({
+        name: cmd.options.name,
+        description: cmd.options.description,
+        options: (cmd as any).slashOptions || []
+      }));
+
+      // Basic diffing (name and description)
+      const needsSync = localCommandsData.length !== remoteCommands.length || 
+        localCommandsData.some(local => {
+          const remote = remoteCommands.find((r: any) => r.name === local.name);
+          return !remote || remote.description !== local.description;
+        });
+
+      if (needsSync) {
+        Logger.info('Changes detected. Syncing slash commands...');
+        await this.client.rest.commands.createGlobalCommand(app.id, localCommandsData);
+        Logger.info('Slash commands synced successfully.');
+      } else {
+        Logger.info('Slash commands are already up to date.');
+      }
+    } catch (err) {
+      Logger.error('Failed to auto-sync slash commands:', err);
+    }
+  }
+
   async load(directory: string) {
     const files = readdirSync(directory, { withFileTypes: true });
     for (const file of files) {

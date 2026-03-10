@@ -22,6 +22,7 @@ export class RESTManager {
   private rateLimits: Map<string, RateLimitData> = new Map();
   private queue: Map<string, Promise<any>> = new Map();
   private MAX_RETRIES = 3;
+  private fastPath = false;
 
   public users: UsersHandler;
   public guilds: GuildsHandler;
@@ -65,6 +66,10 @@ export class RESTManager {
     }
 
     // 2. Queue management (Failure resilient)
+    if (this.fastPath && method === 'GET') {
+      return this.execute(method, endpoint, body, options.retries || 0);
+    }
+
     const currentQueue = this.queue.get(route) || Promise.resolve();
     const nextRequest = (async () => {
       try {
@@ -84,6 +89,13 @@ export class RESTManager {
     }
 
     return result;
+  }
+
+  /**
+   * Enable/Disable High-Throughput mode (Skip queue for GET requests)
+   */
+  setFastPath(enabled: boolean) {
+    this.fastPath = enabled;
   }
 
   private async execute(method: string, endpoint: string, body?: any, retries = 0): Promise<any> {

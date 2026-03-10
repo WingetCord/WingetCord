@@ -10,6 +10,7 @@ import { EventManager } from './EventManager.js';
 import { PluginManager } from './PluginManager.js';
 import { InteractionManager } from './InteractionManager.js';
 import { VoiceManager } from '../voice/VoiceManager.js';
+import { ReactiveStore } from '../utils/ReactiveStore.js';
 
 export class Client extends EventEmitter {
   public token: string;
@@ -21,6 +22,7 @@ export class Client extends EventEmitter {
   public plugins: PluginManager;
   public interactions: InteractionManager;
   public voice: VoiceManager;
+  public store: any;
   public user: any = null;
 
   constructor(options: ClientOptions) {
@@ -44,16 +46,31 @@ export class Client extends EventEmitter {
     this.plugins = new PluginManager(this);
     this.interactions = new InteractionManager(this);
     this.voice = new VoiceManager(this);
+    this.store = new ReactiveStore().state;
 
     this.gateway.on('dispatch', (event: string, data: any) => {
       this.handleEvent(event, data);
     });
   }
 
+  private middlewares: ((ctx: any, next: () => Promise<void>) => Promise<void>)[] = [];
+
+  /**
+   * Add middleware to the client flow.
+   */
+  public use(middleware: (ctx: any, next: () => Promise<void>) => Promise<void>) {
+    this.middlewares.push(middleware);
+    return this;
+  }
+
   public async login() {
     try {
       this.user = await this.rest.request('GET', '/users/@me');
       Logger.info(`Logged in as ${this.user.username}`);
+      
+      // Auto-sync slash commands
+      await this.commands.syncSlashCommands();
+
       this.gateway.connect();
     } catch (error) {
       Logger.error('Failed to login:', error);
@@ -61,8 +78,20 @@ export class Client extends EventEmitter {
     }
   }
 
-  private handleEvent(event: string, data: any) {
-    this.emit(event, data);
-    this.emit('raw', event, data);
+  private async handleEvent(event: string, data: any) {
+    const ctx = { client: this, event, data };
+    
+    let index = -1;
+    const next = async () => {
+      index++;
+      if (index < this.middlewares.length) {
+        await this.middlewares[index](ctx, next);
+      } else {
+        this.emit(event, data);
+        this.emit('raw', event, data);
+      }
+    };
+
+    await next();
   }
 }

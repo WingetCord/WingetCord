@@ -17,5 +17,6 @@ export * from './utils/ComponentBuilders.js';
 export * from './utils/Validator.js';
 export * from './utils/Collector.js';
 export * from './utils/Constants.js';
+export * from './utils/ReactiveStore.js';
 
 export * from './types/index.js';

@@ -19,9 +19,18 @@ export enum ComponentType {
 
 export class ButtonBuilder {
   private data: any = { type: ComponentType.Button };
+  private actionCallback: ((interaction: any) => any) | null = null;
 
   setCustomId(id: string) {
     this.data.custom_id = id;
+    return this;
+  }
+
+  onAction(callback: (interaction: any) => any) {
+    this.actionCallback = callback;
+    if (!this.data.custom_id) {
+      this.data.custom_id = `wc_${Math.random().toString(36).slice(2, 11)}`;
+    }
     return this;
   }
 
@@ -52,12 +61,13 @@ export class ButtonBuilder {
   }
 
   toJSON() {
-    return { ...this.data };
+    return { ...this.data, _action: this.actionCallback };
   }
 }
 
 export class SelectMenuBuilder {
   private data: any;
+  private actionCallback: ((interaction: any) => any) | null = null;
 
   constructor(type: ComponentType = ComponentType.StringSelect) {
     this.data = { type, options: [] };
@@ -65,6 +75,14 @@ export class SelectMenuBuilder {
 
   setCustomId(id: string) {
     this.data.custom_id = id;
+    return this;
+  }
+
+  onAction(callback: (interaction: any) => any) {
+    this.actionCallback = callback;
+    if (!this.data.custom_id) {
+      this.data.custom_id = `wc_${Math.random().toString(36).slice(2, 11)}`;
+    }
     return this;
   }
 
@@ -99,7 +117,7 @@ export class SelectMenuBuilder {
   }
 
   toJSON() {
-    const json = { ...this.data };
+    const json = { ...this.data, _action: this.actionCallback };
     if (json.type !== ComponentType.StringSelect) delete json.options;
     return json;
   }

@@ -9,6 +9,10 @@ export class CommandsHandler extends BaseHandler {
     return this.rest.request('POST', `/applications/${applicationId}/commands`, data);
   }
 
+  async bulkOverwriteGlobalCommands(applicationId: string, data: any[]) {
+    return this.rest.request('PUT', `/applications/${applicationId}/commands`, data);
+  }
+
   async editGlobalCommand(applicationId: string, commandId: string, data: any) {
     return this.rest.request('PATCH', `/applications/${applicationId}/commands/${commandId}`, data);
   }

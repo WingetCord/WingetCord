@@ -43,12 +43,12 @@ export class CommandManager {
 
   /**
    * Automatically diff localized commands with Discord and sync if needed.
+   * @param force If true, skips diffing and forces a bulk overwrite.
    */
-  async syncSlashCommands() {
-    Logger.info('Analyzing slash commands for auto-sync...');
+  async syncSlashCommands(force = false) {
+    Logger.info(force ? 'Force syncing slash commands...' : 'Analyzing slash commands for auto-sync...');
     try {
       const app = await this.client.rest.users.getMe();
-      const remoteCommands = await this.client.rest.request('GET', `/applications/${app.id}/commands`);
       
       const localCommandsData = Array.from(this.commands.values()).map(cmd => ({
         name: cmd.options.name,
@@ -56,22 +56,27 @@ export class CommandManager {
         options: (cmd as any).slashOptions || []
       }));
 
-      // Basic diffing (name and description)
-      const needsSync = localCommandsData.length !== remoteCommands.length || 
-        localCommandsData.some(local => {
-          const remote = remoteCommands.find((r: any) => r.name === local.name);
-          return !remote || remote.description !== local.description;
-        });
+      if (!force) {
+        const remoteCommands = await this.client.rest.request('GET', `/applications/${app.id}/commands`);
+        
+        // Basic diffing (name and description)
+        const needsSync = localCommandsData.length !== remoteCommands.length || 
+          localCommandsData.some(local => {
+            const remote = remoteCommands.find((r: any) => r.name === local.name);
+            return !remote || remote.description !== local.description;
+          });
 
-      if (needsSync) {
+        if (!needsSync) {
+          Logger.info('Slash commands are already up to date.');
+          return;
+        }
         Logger.info('Changes detected. Syncing slash commands...');
-        await this.client.rest.commands.createGlobalCommand(app.id, localCommandsData);
-        Logger.info('Slash commands synced successfully.');
-      } else {
-        Logger.info('Slash commands are already up to date.');
       }
+
+      await this.client.rest.commands.bulkOverwriteGlobalCommands(app.id, localCommandsData);
+      Logger.info('Slash commands synced successfully.');
     } catch (err) {
-      Logger.error('Failed to auto-sync slash commands:', err);
+      Logger.error('Failed to sync slash commands:', err);
     }
   }
 

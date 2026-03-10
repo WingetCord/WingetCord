@@ -1,0 +1,31 @@
+{
+  "name": "wingetcord",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A high-performance Discord framework in TypeScript.",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "ts-node-esm src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/pako": "^2.0.4",
+    "discord-api-types": "^0.37.91",
+    "dotenv": "^16.4.5",
+    "pako": "^2.1.0",
+    "pino": "^9.2.0",
+    "pino-pretty": "^11.2.1",
+    "undici": "^6.19.2",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.9",
+    "@types/ws": "^8.5.10",
+    "edge-runtime": "^2.5.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3"
+  }
+}

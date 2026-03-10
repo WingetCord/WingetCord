@@ -28,6 +28,11 @@ export class EmbedBuilder {
     return this;
   }
 
+  setThumbnail(url: string) {
+    this.data.thumbnail = { url };
+    return this;
+  }
+
   setColor(color: number | string) {
     if (typeof color === 'string') {
       this.data.color = parseInt(color.replace('#', ''), 16);
@@ -41,6 +46,11 @@ export class EmbedBuilder {
     const field: { name: string; value: string; inline?: boolean } = { name, value };
     if (inline !== undefined) field.inline = inline;
     this.data.fields?.push(field);
+    return this;
+  }
+
+  addFields(fields: { name: string; value: string; inline?: boolean }[]) {
+    this.data.fields?.push(...fields);
     return this;
   }
 

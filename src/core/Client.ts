@@ -11,6 +11,7 @@ import { PluginManager } from './PluginManager.js';
 import { InteractionManager } from './InteractionManager.js';
 import { VoiceManager } from '../voice/VoiceManager.js';
 import { ReactiveStore } from '../utils/ReactiveStore.js';
+import { HandlerManager } from './HandlerManager.js';
 
 export class Client extends EventEmitter {
   public token: string;
@@ -21,6 +22,7 @@ export class Client extends EventEmitter {
   public events: EventManager;
   public plugins: PluginManager;
   public interactions: InteractionManager;
+  public handler: HandlerManager;
   public voice: VoiceManager;
   public store: any;
   public user: any = null;
@@ -45,6 +47,7 @@ export class Client extends EventEmitter {
     this.events = new EventManager(this);
     this.plugins = new PluginManager(this);
     this.interactions = new InteractionManager(this);
+    this.handler = new HandlerManager(this);
     this.voice = new VoiceManager(this);
     this.store = new ReactiveStore().state;
 

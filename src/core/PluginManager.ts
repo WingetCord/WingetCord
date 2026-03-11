@@ -9,7 +9,7 @@ export interface PluginMetadata {
 
 export abstract class Plugin {
   constructor(public metadata: PluginMetadata) {}
-  
+
   abstract init(client: Client): Promise<void> | void;
   onStart?(client: Client): Promise<void> | void;
   onStop?(client: Client): Promise<void> | void;

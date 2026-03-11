@@ -118,7 +118,11 @@ export class MiddlewareManager {
   /**
    * Execute middleware chain for an event
    */
-  async execute(event: string, data: unknown, context: Partial<MiddlewareContext> = {}): Promise<void> {
+  async execute(
+    event: string,
+    data: unknown,
+    context: Partial<MiddlewareContext> = {}
+  ): Promise<void> {
     const ctx: MiddlewareContext = {
       event,
       data,
@@ -131,9 +135,7 @@ export class MiddlewareManager {
     // Get applicable middlewares
     const applicable = [
       ...this.globalMiddlewares,
-      ...this.middlewares.filter(m => 
-        m.options.events?.includes(event)
-      ),
+      ...this.middlewares.filter(m => m.options.events?.includes(event)),
     ];
 
     // Build chain
@@ -145,14 +147,14 @@ export class MiddlewareManager {
       }
 
       const middleware = applicable[index++];
-      
+
       if (!middleware) return;
-      
+
       try {
         await middleware.handler(ctx, next);
       } catch (error) {
         Logger.error(`[Middleware:${middleware.options.name}] Error:`, error);
-        
+
         if (middleware.options.onError) {
           middleware.options.onError(error as Error, ctx);
         } else {
@@ -178,10 +180,10 @@ export class MiddlewareManager {
   remove(name: string): boolean {
     const beforeGlobal = this.globalMiddlewares.length;
     const before = this.middlewares.length;
-    
+
     this.globalMiddlewares = this.globalMiddlewares.filter(m => m.options.name !== name);
     this.middlewares = this.middlewares.filter(m => m.options.name !== name);
-    
+
     return this.globalMiddlewares.length < beforeGlobal || this.middlewares.length < before;
   }
 
@@ -204,11 +206,9 @@ export class MiddlewareManager {
    * Sort middlewares by priority
    */
   private sortMiddlewares(): void {
-    this.middlewares.sort((a, b) => 
-      (a.options.priority ?? 100) - (b.options.priority ?? 100)
-    );
-    this.globalMiddlewares.sort((a, b) => 
-      (a.options.priority ?? 100) - (b.options.priority ?? 100)
+    this.middlewares.sort((a, b) => (a.options.priority ?? 100) - (b.options.priority ?? 100));
+    this.globalMiddlewares.sort(
+      (a, b) => (a.options.priority ?? 100) - (b.options.priority ?? 100)
     );
   }
 }
@@ -218,18 +218,15 @@ export class MiddlewareManager {
 /**
  * Rate limiter middleware
  */
-export function createRateLimiter(
-  limit: number,
-  windowMs: number
-): MiddlewareFunction {
+export function createRateLimiter(limit: number, windowMs: number): MiddlewareFunction {
   const buckets = new Map<string, { count: number; resetTime: number }>();
 
   return async (ctx, next) => {
     const key = ctx.userId || ctx.guildId || 'global';
     const now = Date.now();
-    
+
     let bucket = buckets.get(key);
-    
+
     if (!bucket || bucket.resetTime < now) {
       bucket = { count: 0, resetTime: now + windowMs };
       buckets.set(key, bucket);
@@ -254,7 +251,7 @@ export function createValidator(
 ): MiddlewareFunction {
   return async (ctx, next) => {
     const data = ctx.data as Record<string, unknown>;
-    
+
     for (const [field, validator] of Object.entries(schema)) {
       if (!validator(data[field])) {
         throw new Error(`Validation failed for field: ${field}`);
@@ -271,11 +268,11 @@ export function createValidator(
 export function createLoggingMiddleware(): MiddlewareFunction {
   return async (ctx, next) => {
     const start = Date.now();
-    
+
     Logger.debug(`[Middleware:Logger] ${ctx.event} started`);
-    
+
     await next();
-    
+
     const duration = Date.now() - start;
     Logger.debug(`[Middleware:Logger] ${ctx.event} completed in ${duration}ms`);
   };

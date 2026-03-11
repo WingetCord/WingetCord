@@ -1,6 +1,6 @@
 /**
  * Intent Bits - Single source of truth for Discord Gateway Intents
- * 
+ *
  * Discord Gateway Intents allow bots to subscribe to specific events.
  * You must enable intents in the Discord Developer Portal and pass them to the Client.
  */

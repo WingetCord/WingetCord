@@ -43,11 +43,13 @@ export class CommandManager {
   }
 
   async syncSlashCommands(force = false) {
-    Logger.info(force ? 'Force syncing slash commands...' : 'Analyzing slash commands for auto-sync...');
+    Logger.info(
+      force ? 'Force syncing slash commands...' : 'Analyzing slash commands for auto-sync...'
+    );
     try {
       const app = (await this.client.rest.users.getMe()) as { id: string };
 
-      const localCommandsData = Array.from(this.commands.values()).map((cmd) => ({
+      const localCommandsData = Array.from(this.commands.values()).map(cmd => ({
         name: cmd.options.name,
         description: cmd.options.description,
         options: (cmd as unknown as { slashOptions?: unknown[] }).slashOptions || [],
@@ -61,8 +63,8 @@ export class CommandManager {
 
         const needsSync =
           localCommandsData.length !== remoteCommands.length ||
-          localCommandsData.some((local) => {
-            const remote = remoteCommands.find((r) => r.name === local.name);
+          localCommandsData.some(local => {
+            const remote = remoteCommands.find(r => r.name === local.name);
             return !remote || remote.description !== local.description;
           });
 
@@ -143,7 +145,7 @@ export class CommandManager {
     }
 
     try {
-      const msgObj = new Message(this.client, message as Record<string, unknown>);
+      const msgObj = new Message(this.client, message as any);
       await command.execute({ client: this.client, message: msgObj, args });
     } catch (error) {
       Logger.error(`Error executing command ${commandName}:`, error);

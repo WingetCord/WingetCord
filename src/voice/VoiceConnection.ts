@@ -64,7 +64,9 @@ export class VoiceConnection {
    */
   playURL(url: string): void {
     if (!this.player) {
-      console.warn('[VoiceConnection] No player available. Install @discordjs/voice for audio playback.');
+      console.warn(
+        '[VoiceConnection] No player available. Install @discordjs/voice for audio playback.'
+      );
       return;
     }
     console.log(`[VoiceConnection] Playing: ${url}`);

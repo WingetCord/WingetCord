@@ -12,9 +12,13 @@ export class VoiceManager {
     this.maxConnections = options.maxConnections ?? 100;
   }
 
-  async join(guildId: string, channelId: string, adapterCreator: unknown): Promise<VoiceConnection> {
+  async join(
+    guildId: string,
+    channelId: string,
+    adapterCreator: unknown
+  ): Promise<VoiceConnection> {
     const key = `${guildId}:${channelId}`;
-    
+
     let connection = this.connections.get(key);
     if (connection) {
       return connection;
@@ -34,7 +38,7 @@ export class VoiceManager {
   leave(guildId: string, channelId: string): boolean {
     const key = `${guildId}:${channelId}`;
     const connection = this.connections.get(key);
-    
+
     if (!connection) {
       return false;
     }

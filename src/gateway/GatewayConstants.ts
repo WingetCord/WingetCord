@@ -45,5 +45,5 @@ export const MAX_RATE_LIMIT_RETRIES = 5;
 export const MAX_SERVER_ERROR_RETRIES = 3;
 export const USER_AGENT = 'WingetCord (https://github.com/wingetcord/wingetcord, 1.0.0)';
 
-export type GatewayOpcode = typeof GatewayOpcodes[keyof typeof GatewayOpcodes];
-export type GatewayCloseCode = typeof GatewayCloseCodes[keyof typeof GatewayCloseCodes];
+export type GatewayOpcode = (typeof GatewayOpcodes)[keyof typeof GatewayOpcodes];
+export type GatewayCloseCode = (typeof GatewayCloseCodes)[keyof typeof GatewayCloseCodes];

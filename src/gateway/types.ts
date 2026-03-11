@@ -23,7 +23,7 @@ export const OPCodes = {
   HEARTBEAT_ACK: 11,
 } as const;
 
-export type OPCode = typeof OPCodes[keyof typeof OPCodes];
+export type OPCode = (typeof OPCodes)[keyof typeof OPCodes];
 
 // ============== Gateway Intent Bits ==============
 
@@ -50,17 +50,28 @@ export const IntentBits = {
   MESSAGE_CONTENT: 1 << 15,
   GUILD_SCHEDULED_EVENTS: 1 << 16,
   GUILD_AUTO_MODERATION: 1 << 20,
-  
+
   // Shortcuts
   ALL: -1,
-  UNPRIVILEGED: 
-    (1 << 0) | (1 << 3) | (1 << 4) | (1 << 5) | (1 << 6) | 
-    (1 << 7) | (1 << 9) | (1 << 10) | (1 << 11) | (1 << 12) | 
-    (1 << 13) | (1 << 14) | (1 << 16) | (1 << 20),
+  UNPRIVILEGED:
+    (1 << 0) |
+    (1 << 3) |
+    (1 << 4) |
+    (1 << 5) |
+    (1 << 6) |
+    (1 << 7) |
+    (1 << 9) |
+    (1 << 10) |
+    (1 << 11) |
+    (1 << 12) |
+    (1 << 13) |
+    (1 << 14) |
+    (1 << 16) |
+    (1 << 20),
   PRIVILEGED: (1 << 1) | (1 << 8) | (1 << 15),
 } as const;
 
-export type IntentBit = typeof IntentBits[keyof typeof IntentBits];
+export type IntentBit = (typeof IntentBits)[keyof typeof IntentBits];
 export type IntentName = keyof typeof IntentBits;
 
 /**
@@ -315,9 +326,7 @@ export interface GatewayState {
 /**
  * Gateway event listener
  */
-export type GatewayEventListener<_T extends GatewayEvent = GatewayEvent> = (
-  data: unknown
-) => void;
+export type GatewayEventListener<_T extends GatewayEvent = GatewayEvent> = (data: unknown) => void;
 
 /**
  * Type-safe event emitter interface

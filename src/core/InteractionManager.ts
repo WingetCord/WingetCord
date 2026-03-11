@@ -31,7 +31,10 @@ export class InteractionManager extends EventEmitter {
 
   private scanForActions(components: unknown[]) {
     if (!components) return;
-    for (const row of components as { type: number; components: { _action?: unknown; custom_id?: string }[] }[]) {
+    for (const row of components as {
+      type: number;
+      components: { _action?: unknown; custom_id?: string }[];
+    }[]) {
       if (row.type !== 1) continue;
       for (const comp of row.components) {
         if (comp._action && comp.custom_id) {
@@ -105,7 +108,9 @@ export class InteractionManager extends EventEmitter {
 
   async acknowledge(interactionId: string, token: string, type = 6) {
     try {
-      await this.client.rest.request('POST', `/interactions/${interactionId}/${token}/callback`, { type });
+      await this.client.rest.request('POST', `/interactions/${interactionId}/${token}/callback`, {
+        type,
+      });
     } catch (err) {
       Logger.error(`Failed to acknowledge interaction ${interactionId}`, err);
     }

@@ -69,7 +69,7 @@ export class AudioQueue {
   shuffle(): void {
     if (this.shuffling) return;
     this.shuffling = true;
-    
+
     // Fisher-Yates shuffle - use temp variable
     for (let i = this.tracks.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));

@@ -101,7 +101,7 @@ export class Scheduler {
   cancel(taskId: string): boolean {
     const task = this.tasks.get(taskId);
     if (!task) return false;
-    
+
     if (task.timer) {
       if (task.type === 'interval') {
         clearInterval(task.timer as ReturnType<typeof setInterval>);
@@ -139,7 +139,7 @@ export class Scheduler {
   private async runTask(task: Task): Promise<void> {
     if (this.activeCount >= this.maxConcurrent) return;
     this.activeCount++;
-    
+
     try {
       task.lastRun = new Date();
       task.executionCount++;

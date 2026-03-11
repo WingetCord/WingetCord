@@ -19,16 +19,16 @@ export class GatewayManager extends EventEmitter {
   private token: string;
   private intents: number;
   private shard?: ShardOptions;
-  
+
   public status: 'CONNECTED' | 'CONNECTING' | 'DISCONNECTED' | 'RECONNECTING' = 'DISCONNECTED';
   public ping = 0;
   private lastHeartbeatSend = 0;
-  
+
   private heartbeatInterval?: NodeJS.Timeout;
   private lastSequence: number | null = null;
   private sessionId: string | null = null;
   private resumeUrl: string | null = null;
-  
+
   private isConnecting = false;
 
   // Rate Limiting: Discord allows 120 packets per 60 seconds (roughly 2 per second)
@@ -51,7 +51,7 @@ export class GatewayManager extends EventEmitter {
 
     const url = this.resumeUrl || Constants.GATEWAY_URL;
     Logger.info(`Connecting to Discord Gateway [Shard ${this.shard?.id ?? 0}]...`);
-    
+
     this.ws = new WebSocket(url);
 
     this.ws.on('open', () => {
@@ -62,7 +62,7 @@ export class GatewayManager extends EventEmitter {
 
     this.ws.on('message', (data: any) => {
       let payload: GatewayPayload;
-      
+
       try {
         if (data instanceof Buffer) {
           const decompressed = pako.inflate(data, { to: 'string' });
@@ -135,10 +135,13 @@ export class GatewayManager extends EventEmitter {
 
   private startHeartbeat(interval: number) {
     if (this.heartbeatInterval) clearInterval(this.heartbeatInterval);
-    setTimeout(() => {
-      this.sendHeartbeat();
-      this.heartbeatInterval = setInterval(() => this.sendHeartbeat(), interval);
-    }, Math.floor(Math.random() * interval));
+    setTimeout(
+      () => {
+        this.sendHeartbeat();
+        this.heartbeatInterval = setInterval(() => this.sendHeartbeat(), interval);
+      },
+      Math.floor(Math.random() * interval)
+    );
   }
 
   private sendHeartbeat() {
@@ -148,32 +151,36 @@ export class GatewayManager extends EventEmitter {
 
   private identify() {
     Logger.info(`Identifying [Shard ${this.shard?.id ?? 0}]...`);
-    this.send(JSON.stringify({
-      op: 2,
-      d: {
-        token: this.token,
-        intents: this.intents,
-        shard: this.shard ? [this.shard.id, this.shard.total] : undefined,
-        properties: {
-          os: process.platform,
-          browser: 'WingetCord',
-          device: 'WingetCord',
+    this.send(
+      JSON.stringify({
+        op: 2,
+        d: {
+          token: this.token,
+          intents: this.intents,
+          shard: this.shard ? [this.shard.id, this.shard.total] : undefined,
+          properties: {
+            os: process.platform,
+            browser: 'WingetCord',
+            device: 'WingetCord',
+          },
+          compress: false,
         },
-        compress: false,
-      },
-    }));
+      })
+    );
   }
 
   private resume() {
     Logger.info(`Resuming session ${this.sessionId}...`);
-    this.send(JSON.stringify({
-      op: 6,
-      d: {
-        token: this.token,
-        session_id: this.sessionId,
-        seq: this.lastSequence,
-      },
-    }));
+    this.send(
+      JSON.stringify({
+        op: 6,
+        d: {
+          token: this.token,
+          session_id: this.sessionId,
+          seq: this.lastSequence,
+        },
+      })
+    );
   }
 
   /**
@@ -187,7 +194,7 @@ export class GatewayManager extends EventEmitter {
     this.packetLoop = setInterval(() => {
       const now = Date.now();
       const elapsed = now - this.lastPacketFlush;
-      
+
       // Regain 1 packet per 500ms (120 per 60s)
       this.packetBucket = Math.min(120, this.packetBucket + Math.floor(elapsed / 500));
       this.lastPacketFlush = now;
@@ -206,7 +213,7 @@ export class GatewayManager extends EventEmitter {
     const resumableCodes = [4000, 4001, 4002, 4003, 4005, 4007, 4008, 4009];
     if (resumableCodes.includes(code) || code < 4000) {
       const wait = 5000;
-      Logger.info(`Attempting to reconnect in ${wait/1000}s...`);
+      Logger.info(`Attempting to reconnect in ${wait / 1000}s...`);
       setTimeout(() => this.connect(), wait);
     } else {
       Logger.error(`Fatal gateway error ${code}. Cannot reconnect.`);

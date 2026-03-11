@@ -23,14 +23,14 @@ export class Permissions {
    * Check if this permission set has any of the specified permissions.
    */
   hasAny(...permissions: (bigint | string | number | Permissions)[]): boolean {
-    return permissions.some((p) => this.has(p));
+    return permissions.some(p => this.has(p));
   }
 
   /**
    * Check if this permission set has all of the specified permissions.
    */
   hasAll(...permissions: (bigint | string | number | Permissions)[]): boolean {
-    return permissions.every((p) => this.has(p));
+    return permissions.every(p => this.has(p));
   }
 
   /**
@@ -139,7 +139,7 @@ export class PermissionUtils {
    */
   static parse(permissions: string): bigint {
     let bits = 0n;
-    const perms = permissions.split(',').map((p) => p.trim());
+    const perms = permissions.split(',').map(p => p.trim());
     for (const perm of perms) {
       if (perm in PermissionFlags) {
         const flag = (PermissionFlags as Record<string, bigint>)[perm];

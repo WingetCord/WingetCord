@@ -13,11 +13,11 @@ export class LFUCache<K, V> {
   get(key: K): V | undefined {
     const value = this.cache.get(key);
     if (value === undefined) return undefined;
-    
+
     // Increment frequency
     const freq = this.freqMap.get(key) ?? 0;
     this.freqMap.set(key, freq + 1);
-    
+
     return value;
   }
 

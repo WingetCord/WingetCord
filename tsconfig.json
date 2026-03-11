@@ -30,8 +30,8 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true
   },

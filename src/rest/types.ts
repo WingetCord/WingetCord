@@ -54,7 +54,7 @@ export type Route =
   | '/users/@me'
   | `/users/@me/guilds/${string}`
   | '/users/@me/guilds'
-  
+
   // Guilds
   | '/guilds'
   | `/guilds/${string}`
@@ -80,7 +80,7 @@ export type Route =
   | `/guilds/${string}/scheduled-events/${string}`
   | `/guilds/${string}/auto-moderation/rules`
   | `/guilds/${string}/auto-moderation/rules/${string}`
-  
+
   // Channels
   | '/channels'
   | `/channels/${string}`
@@ -94,14 +94,14 @@ export type Route =
   | `/channels/${string}/typing`
   | `/channels/${string}/pins`
   | `/channels/${string}/pins/${string}`
-  
+
   // Webhooks
   | '/webhooks'
   | `/webhooks/${string}`
   | `/webhooks/${string}/messages/${string}`
   | `/webhooks/${string}/github`
   | `/webhooks/${string}/slack`
-  
+
   // Application Commands
   | `/applications/${string}/commands`
   | `/applications/${string}/commands/${string}`
@@ -109,15 +109,15 @@ export type Route =
   | `/applications/${string}/guilds/${string}/commands`
   | `/applications/${string}/guilds/${string}/commands/${string}`
   | `/applications/${string}/guilds/${string}/commands/${string}/permissions`
-  
+
   // Interactions
   | `/interactions/${string}/${string}/callback`
   | `/webhooks/${string}/${string}/messages/@original`
   | `/webhooks/${string}/${string}/messages/${string}`
-  
+
   // Guild Scheduled Events
   | `/guilds/${string}/scheduled-events/${string}/users`
-  
+
   // Threads
   | `/channels/${string}/messages/${string}/threads`
   | `/channels/${string}/thread-members`
@@ -142,7 +142,7 @@ export interface RouteMetadata {
  * Major parameters that require rate limit isolation
  */
 export const MAJOR_PARAMETERS = ['channels', 'guilds', 'webhooks'] as const;
-export type MajorParameter = typeof MAJOR_PARAMETERS[number];
+export type MajorParameter = (typeof MAJOR_PARAMETERS)[number];
 
 /**
  * Parse a route and extract metadata
@@ -151,7 +151,7 @@ export function parseRoute(route: string): RouteMetadata {
   const parts = route.split('/').filter(Boolean);
   let hasMajorParam = false;
   let majorParam: string | undefined;
-  
+
   for (let i = 0; i < parts.length; i++) {
     if (MAJOR_PARAMETERS.includes(parts[i] as MajorParameter) && parts[i + 1]) {
       hasMajorParam = true;
@@ -159,7 +159,7 @@ export function parseRoute(route: string): RouteMetadata {
       break;
     }
   }
-  
+
   return {
     method: 'GET' as HttpMethod,
     route,

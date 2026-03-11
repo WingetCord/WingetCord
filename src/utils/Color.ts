@@ -20,22 +20,14 @@ export class Color {
     if (!result) {
       throw new Error('Invalid hex color');
     }
-    return new Color(
-      parseInt(result[1]!, 16),
-      parseInt(result[2]!, 16),
-      parseInt(result[3]!, 16)
-    );
+    return new Color(parseInt(result[1]!, 16), parseInt(result[2]!, 16), parseInt(result[3]!, 16));
   }
 
   /**
    * Create from integer
    */
   static fromInt(value: number): Color {
-    return new Color(
-      (value >> 16) & 0xff,
-      (value >> 8) & 0xff,
-      value & 0xff
-    );
+    return new Color((value >> 16) & 0xff, (value >> 8) & 0xff, value & 0xff);
   }
 
   /**
@@ -150,14 +142,14 @@ export class Color {
 }
 
 export const DiscordColors = {
-  BLURPLE: 0x5865F2,
-  GREEN: 0x57F287,
-  YELLOW: 0xFEE75C,
-  FUCHSIA: 0xEB459E,
-  RED: 0xED4245,
-  WHITE: 0xFFFFFF,
+  BLURPLE: 0x5865f2,
+  GREEN: 0x57f287,
+  YELLOW: 0xfee75c,
+  FUCHSIA: 0xeb459e,
+  RED: 0xed4245,
+  WHITE: 0xffffff,
   BLACK: 0x000000,
-  GREY: 0x99AAB5,
-  DARK_GREY: 0x2C2F33,
-  DARKER_GREY: 0x23272A,
+  GREY: 0x99aab5,
+  DARK_GREY: 0x2c2f33,
+  DARKER_GREY: 0x23272a,
 } as const;

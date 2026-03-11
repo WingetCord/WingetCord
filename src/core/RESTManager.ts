@@ -195,14 +195,19 @@ export class RESTManager {
     this.fastPath = enabled;
   }
 
-  private async execute(method: string, endpoint: string, body?: unknown, retries = 0): Promise<unknown> {
+  private async execute(
+    method: string,
+    endpoint: string,
+    body?: unknown,
+    retries = 0
+  ): Promise<unknown> {
     const route = this.getRoute(endpoint);
     const rl = this.rateLimits.get(route);
 
     if (rl && rl.remaining === 0 && Date.now() < rl.reset) {
       const wait = rl.reset - Date.now();
       Logger.warn(`Rate limit on ${route}, waiting ${wait}ms`);
-      await new Promise((r) => setTimeout(r, wait));
+      await new Promise(r => setTimeout(r, wait));
     }
 
     try {
@@ -221,9 +226,9 @@ export class RESTManager {
 
       if (res.statusCode === 429) {
         const data = (await res.body.json()) as { retry_after?: number };
-        const retryAfter = (data.retry_after! * 1000) || 5000;
+        const retryAfter = data.retry_after! * 1000 || 5000;
         Logger.error(`Rate Limit Hit [${route}]! Retry after ${retryAfter}ms`);
-        await new Promise((r) => setTimeout(r, retryAfter));
+        await new Promise(r => setTimeout(r, retryAfter));
         return this.execute(method, endpoint, body, retries);
       }
 
@@ -233,7 +238,7 @@ export class RESTManager {
         if (res.statusCode >= 500 && retries < this.MAX_RETRIES) {
           const backoff = Math.pow(2, retries) * 1000;
           Logger.warn(`Server error ${res.statusCode} on ${endpoint}, retrying in ${backoff}ms...`);
-          await new Promise((r) => setTimeout(r, backoff));
+          await new Promise(r => setTimeout(r, backoff));
           return this.execute(method, endpoint, body, retries + 1);
         }
         const err = responseBody as { message: string; code: number };
@@ -246,7 +251,7 @@ export class RESTManager {
         const backoff = Math.pow(2, retries) * 1000;
         const e = err as Error;
         Logger.warn(`Request to ${endpoint} failed (${e.message}), retrying in ${backoff}ms...`);
-        await new Promise((r) => setTimeout(r, backoff));
+        await new Promise(r => setTimeout(r, backoff));
         return this.execute(method, endpoint, body, retries + 1);
       }
       throw err;

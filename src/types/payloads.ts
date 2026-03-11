@@ -45,7 +45,13 @@ export interface ComponentPayload {
   placeholder?: string;
   min_values?: number;
   max_values?: number;
-  options?: { label: string; value: string; description?: string; emoji?: unknown; default?: boolean }[];
+  options?: {
+    label: string;
+    value: string;
+    description?: string;
+    emoji?: unknown;
+    default?: boolean;
+  }[];
 }
 
 export interface InteractionResponsePayload {

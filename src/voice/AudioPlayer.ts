@@ -43,7 +43,7 @@ export class AudioPlayer extends EventEmitter {
     this.emit('start', this.currentTrack);
 
     Logger.info(`Playing track: ${this.currentTrack.title}`);
-    
+
     try {
       // Placeholder for actual RTP/Opus streaming logic
       // In a real implementation, we'd wait for the stream to end

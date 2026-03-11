@@ -60,7 +60,13 @@ export { AudioPlayer } from './audio/AudioPlayer.js';
 
 // Interactions
 export { InteractionManager } from './interactions/InteractionManager.js';
-export type { Interaction, CommandInteraction, ComponentInteraction, AutocompleteInteraction, ModalSubmitInteraction } from './interactions/index.js';
+export type {
+  Interaction,
+  CommandInteraction,
+  ComponentInteraction,
+  AutocompleteInteraction,
+  ModalSubmitInteraction,
+} from './interactions/index.js';
 
 // Commands
 export { CommandManager } from './commands/CommandManager.js';

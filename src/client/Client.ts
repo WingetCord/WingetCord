@@ -16,7 +16,7 @@ export class Client extends EventEmitter {
   public readonly scheduler: Scheduler;
   public readonly metrics: MetricsRegistry;
   public readonly rest: RESTManager;
-  
+
   private startedAt: Date | null = null;
   private readyAt: Date | null = null;
   private shardId?: number;
@@ -25,20 +25,20 @@ export class Client extends EventEmitter {
   constructor(options: ClientOptions) {
     super();
     this.token = options.token;
-    
+
     if (Array.isArray(options.intents)) {
       this.intents = calculateIntents(options.intents as unknown as IntentBit[]);
     } else {
       this.intents = options.intents;
     }
-    
+
     if (options.shardId !== undefined) {
       this.shardId = options.shardId;
     }
     if (options.shardCount !== undefined) {
       this._shardCount = options.shardCount;
     }
-    
+
     this.cache = new CacheManager();
     this.scheduler = new Scheduler();
     this.metrics = globalMetrics;

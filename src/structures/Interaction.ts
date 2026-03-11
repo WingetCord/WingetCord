@@ -10,7 +10,10 @@ export class Interaction {
   public data: any;
   public app_permissions?: string;
 
-  constructor(protected client: Client, payload: any) {
+  constructor(
+    protected client: Client,
+    payload: any
+  ) {
     this.id = payload.id;
     this.token = payload.token;
     this.type = payload.type;
@@ -28,7 +31,7 @@ export class Interaction {
     const body = typeof options === 'string' ? { content: options } : options;
     return this.client.rest.request('POST', `/interactions/${this.id}/${this.token}/callback`, {
       type: 4, // CHANNEL_MESSAGE_WITH_SOURCE
-      data: body
+      data: body,
     });
   }
 
@@ -38,7 +41,7 @@ export class Interaction {
   async deferReply(ephemeral: boolean = false) {
     return this.client.rest.request('POST', `/interactions/${this.id}/${this.token}/callback`, {
       type: 5, // DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE
-      data: ephemeral ? { flags: 64 } : undefined
+      data: ephemeral ? { flags: 64 } : undefined,
     });
   }
 
@@ -47,14 +50,21 @@ export class Interaction {
    */
   async editReply(options: any) {
     const body = typeof options === 'string' ? { content: options } : options;
-    return this.client.rest.request('PATCH', `/webhooks/${this.client.user!.id}/${this.token}/messages/@original`, body);
+    return this.client.rest.request(
+      'PATCH',
+      `/webhooks/${this.client.user!.id}/${this.token}/messages/@original`,
+      body
+    );
   }
 
   /**
    * Delete the original response.
    */
   async deleteReply() {
-    return this.client.rest.request('DELETE', `/webhooks/${this.client.user!.id}/${this.token}/messages/@original`);
+    return this.client.rest.request(
+      'DELETE',
+      `/webhooks/${this.client.user!.id}/${this.token}/messages/@original`
+    );
   }
 
   /**
@@ -62,7 +72,11 @@ export class Interaction {
    */
   async followUp(options: any) {
     const body = typeof options === 'string' ? { content: options } : options;
-    return this.client.rest.request('POST', `/webhooks/${this.client.user!.id}/${this.token}`, body);
+    return this.client.rest.request(
+      'POST',
+      `/webhooks/${this.client.user!.id}/${this.token}`,
+      body
+    );
   }
 
   /**
@@ -71,7 +85,7 @@ export class Interaction {
   async showModal(modal: any) {
     return this.client.rest.request('POST', `/interactions/${this.id}/${this.token}/callback`, {
       type: 9, // MODAL
-      data: modal.toJSON?.() || modal
+      data: modal.toJSON?.() || modal,
     });
   }
 }
@@ -106,7 +120,7 @@ export class ComponentInteraction extends Interaction {
     const body = typeof options === 'string' ? { content: options } : options;
     return this.client.rest.request('POST', `/interactions/${this.id}/${this.token}/callback`, {
       type: 7, // UPDATE_MESSAGE
-      data: body
+      data: body,
     });
   }
 
@@ -115,7 +129,7 @@ export class ComponentInteraction extends Interaction {
    */
   async deferUpdate() {
     return this.client.rest.request('POST', `/interactions/${this.id}/${this.token}/callback`, {
-      type: 6 // DEFERRED_UPDATE_MESSAGE
+      type: 6, // DEFERRED_UPDATE_MESSAGE
     });
   }
 }
@@ -135,7 +149,7 @@ export class AutocompleteInteraction extends Interaction {
   async respond(choices: { name: string; value: string | number }[]) {
     return this.client.rest.request('POST', `/interactions/${this.id}/${this.token}/callback`, {
       type: 8, // APPLICATION_COMMAND_AUTOCOMPLETE_RESULT
-      data: { choices }
+      data: { choices },
     });
   }
 }

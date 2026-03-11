@@ -1,5 +1,6 @@
 import { BaseStructure } from './Base.js';
 import type { Client } from '../client/Client.js';
+type AnyClient = any;
 
 export class User extends BaseStructure {
   public readonly id: string;
@@ -8,7 +9,16 @@ export class User extends BaseStructure {
   public readonly avatar: string | null;
   public readonly bot: boolean | undefined;
 
-  constructor(client: Client, data: { id: string; username: string; discriminator: string; avatar: string | null; bot?: boolean }) {
+  constructor(
+    client: AnyClient,
+    data: {
+      id: string;
+      username: string;
+      discriminator: string;
+      avatar: string | null;
+      bot?: boolean;
+    }
+  ) {
     super(client);
     this.id = data.id;
     this.username = data.username;

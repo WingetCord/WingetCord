@@ -41,20 +41,20 @@ export class LRUCache<K, V> implements ICache<K, V> {
 
   get(key: K): V | undefined {
     const entry = this.cache.get(key);
-    
+
     if (!entry) return undefined;
-    
+
     // Check expiration
     if (entry.expiresAt && Date.now() > entry.expiresAt) {
       this.cache.delete(key);
       return undefined;
     }
-    
+
     // Update access time and move to end (most recently used)
     entry.lastAccessed = Date.now();
     this.cache.delete(key);
     this.cache.set(key, entry);
-    
+
     return entry.value;
   }
 
@@ -66,7 +66,7 @@ export class LRUCache<K, V> implements ICache<K, V> {
         this.cache.delete(firstKey);
       }
     }
-    
+
     this.cache.set(key, {
       value,
       timestamp: Date.now(),
@@ -74,19 +74,19 @@ export class LRUCache<K, V> implements ICache<K, V> {
       accessCount: 0,
       lastAccessed: Date.now(),
     });
-    
+
     return this;
   }
 
   has(key: K): boolean {
     const entry = this.cache.get(key);
     if (!entry) return false;
-    
+
     if (entry.expiresAt && Date.now() > entry.expiresAt) {
       this.cache.delete(key);
       return false;
     }
-    
+
     return true;
   }
 
@@ -130,21 +130,21 @@ export class LFUCache<K, V> implements ICache<K, V> {
 
   get(key: K): V | undefined {
     const entry = this.cache.get(key);
-    
+
     if (!entry) return undefined;
-    
+
     // Check expiration
     if (entry.expiresAt && Date.now() > entry.expiresAt) {
       this.cache.delete(key);
       this.accessCounts.delete(key);
       return undefined;
     }
-    
+
     // Increment access count
     const count = (this.accessCounts.get(key) || 0) + 1;
     this.accessCounts.set(key, count);
     entry.accessCount = count;
-    
+
     return entry.value;
   }
 
@@ -153,7 +153,7 @@ export class LFUCache<K, V> implements ICache<K, V> {
     if (this.cache.size >= this.maxSize && !this.cache.has(key)) {
       this.evictLFU();
     }
-    
+
     this.cache.set(key, {
       value,
       timestamp: Date.now(),
@@ -161,20 +161,20 @@ export class LFUCache<K, V> implements ICache<K, V> {
       accessCount: 1,
     });
     this.accessCounts.set(key, 1);
-    
+
     return this;
   }
 
   has(key: K): boolean {
     const entry = this.cache.get(key);
     if (!entry) return false;
-    
+
     if (entry.expiresAt && Date.now() > entry.expiresAt) {
       this.cache.delete(key);
       this.accessCounts.delete(key);
       return false;
     }
-    
+
     return true;
   }
 
@@ -225,7 +225,7 @@ export class TTLCache<K, V> implements ICache<K, V> {
   constructor(maxSize = 1000, defaultTTL = 3600000, autoSweep = true) {
     this.maxSize = maxSize;
     this.defaultTTL = defaultTTL;
-    
+
     if (autoSweep) {
       this.startSweep();
     }
@@ -233,14 +233,14 @@ export class TTLCache<K, V> implements ICache<K, V> {
 
   get(key: K): V | undefined {
     const entry = this.cache.get(key);
-    
+
     if (!entry) return undefined;
-    
+
     if (entry.expiresAt && Date.now() > entry.expiresAt) {
       this.cache.delete(key);
       return undefined;
     }
-    
+
     return entry.value;
   }
 
@@ -248,25 +248,25 @@ export class TTLCache<K, V> implements ICache<K, V> {
     if (this.cache.size >= this.maxSize && !this.cache.has(key)) {
       this.evictOldest();
     }
-    
+
     this.cache.set(key, {
       value,
       timestamp: Date.now(),
       ...(ttl > 0 ? { expiresAt: Date.now() + ttl } : {}),
     });
-    
+
     return this;
   }
 
   has(key: K): boolean {
     const entry = this.cache.get(key);
     if (!entry) return false;
-    
+
     if (entry.expiresAt && Date.now() > entry.expiresAt) {
       this.cache.delete(key);
       return false;
     }
-    
+
     return true;
   }
 
@@ -288,7 +288,7 @@ export class TTLCache<K, V> implements ICache<K, V> {
   touch(key: K, ttl = this.defaultTTL): boolean {
     const entry = this.cache.get(key);
     if (!entry) return false;
-    
+
     entry.expiresAt = Date.now() + ttl;
     return true;
   }
@@ -308,14 +308,14 @@ export class TTLCache<K, V> implements ICache<K, V> {
   sweep(): number {
     let removed = 0;
     const now = Date.now();
-    
+
     for (const [key, entry] of this.cache) {
       if (entry.expiresAt && now > entry.expiresAt) {
         this.cache.delete(key);
         removed++;
       }
     }
-    
+
     return removed;
   }
 
@@ -354,7 +354,7 @@ export class TTLCache<K, V> implements ICache<K, V> {
 export class CompositeCache<K, V> implements ICache<K, V> {
   private caches: ICache<K, V>[] = [];
 
-  constructor(policies: Array<{ new(...args: unknown[]): ICache<K, V> }>) {
+  constructor(policies: Array<{ new (...args: unknown[]): ICache<K, V> }>) {
     this.caches = policies.map(Policy => new Policy());
   }
 

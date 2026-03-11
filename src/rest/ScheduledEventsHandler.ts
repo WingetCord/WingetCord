@@ -5,7 +5,10 @@ export class ScheduledEventsHandler extends BaseHandler {
    * List scheduled events for a guild.
    */
   async list(guildId: string, withUserCount: boolean = false) {
-    return this.rest.request('GET', `/guilds/${guildId}/scheduled-events?with_user_count=${withUserCount}`);
+    return this.rest.request(
+      'GET',
+      `/guilds/${guildId}/scheduled-events?with_user_count=${withUserCount}`
+    );
   }
 
   /**
@@ -19,7 +22,10 @@ export class ScheduledEventsHandler extends BaseHandler {
    * Get a scheduled event.
    */
   async get(guildId: string, eventId: string, withUserCount: boolean = false) {
-    return this.rest.request('GET', `/guilds/${guildId}/scheduled-events/${eventId}?with_user_count=${withUserCount}`);
+    return this.rest.request(
+      'GET',
+      `/guilds/${guildId}/scheduled-events/${eventId}?with_user_count=${withUserCount}`
+    );
   }
 
   /**
@@ -39,7 +45,11 @@ export class ScheduledEventsHandler extends BaseHandler {
   /**
    * Get event users.
    */
-  async getUsers(guildId: string, eventId: string, options: { limit?: number; with_member?: boolean; before?: string; after?: string } = {}) {
+  async getUsers(
+    guildId: string,
+    eventId: string,
+    options: { limit?: number; with_member?: boolean; before?: string; after?: string } = {}
+  ) {
     let query = '';
     if (Object.keys(options).length > 0) {
       query = '?' + new URLSearchParams(options as any).toString();

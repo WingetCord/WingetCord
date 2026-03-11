@@ -50,8 +50,8 @@ export class HandlerManager {
       const stat = statSync(filePath);
 
       if (stat.isDirectory()) {
-         await this.loadDirectory(filePath, type);
-         continue;
+        await this.loadDirectory(filePath, type);
+        continue;
       }
 
       if (!file.endsWith('.ts') && !file.endsWith('.js')) continue;
@@ -71,7 +71,7 @@ export class HandlerManager {
           this.client.events.register(instance);
           Logger.debug(`[Handler] Registered event: ${instance.name}`);
         } else if (type === 'interaction' && instance instanceof InteractionHandler) {
-          this.client.interactions.registerAction(instance.customId, (i) => instance.execute(i));
+          this.client.interactions.registerAction(instance.customId, i => instance.execute(i));
           Logger.debug(`[Handler] Registered interaction handler: ${instance.customId}`);
         }
       } catch (err) {

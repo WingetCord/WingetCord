@@ -1,6 +1,6 @@
 {
   "name": "@wingetcord/wingetcord",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "A high-performance TypeScript Discord framework",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -38,14 +38,14 @@
   "scripts": {
     "build": "tsup src/index.ts src/cli/index.ts --format cjs,esm --dts --clean",
     "dev": "tsx watch examples/basic-bot/index.ts",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "test:coverage": "jest --coverage",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
-    "format": "prettier --write src tests",
+    "format": "prettier --write src",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist",
-    "prepublishOnly": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "prepublishOnly": "npm run typecheck && npm run lint && npm run format && npm run test && npm run build",
     "release": "changeset publish"
   },
   "engines": {

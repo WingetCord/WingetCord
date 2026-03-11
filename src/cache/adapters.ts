@@ -32,11 +32,7 @@ export class MemoryCache<K, V> implements CacheAdapter<K, V> {
   private hits = 0;
   private misses = 0;
 
-  constructor(
-    maxSize = 1000,
-    defaultTTL = 3600000,
-    policy: 'LRU' | 'LFU' | 'TTL' = 'LRU'
-  ) {
+  constructor(maxSize = 1000, defaultTTL = 3600000, policy: 'LRU' | 'LFU' | 'TTL' = 'LRU') {
     switch (policy) {
       case 'LRU':
         this.cache = new LRUCache<K, V>(maxSize, defaultTTL);
@@ -115,7 +111,7 @@ export class CacheManager {
       options?.ttl || 3600000,
       options?.policy || 'LRU'
     );
-    
+
     this.caches.set(name, cache as CacheAdapter<unknown, unknown>);
     return cache;
   }
@@ -144,13 +140,13 @@ export class CacheManager {
    */
   getAllStats(): Record<string, CacheStats> {
     const stats: Record<string, CacheStats> = {};
-    
+
     for (const [name, cache] of this.caches) {
       if (cache.getStats) {
         stats[name] = cache.getStats();
       }
     }
-    
+
     return stats;
   }
 }

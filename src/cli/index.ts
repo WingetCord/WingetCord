@@ -49,13 +49,13 @@ async function getPackageJson(dir: string): Promise<PackageJson | null> {
 
 async function init(): Promise<void> {
   console.log('Initializing WingetCord project...');
-  
+
   const currentDir = process.cwd();
   const packageJson = await getPackageJson(currentDir);
-  
+
   if (packageJson) {
     console.log('package.json already exists. Adding WingetCord dependency...');
-    
+
     const updated: PackageJson = {
       ...packageJson,
       dependencies: {
@@ -68,16 +68,13 @@ async function init(): Promise<void> {
         build: 'tsc',
       },
     };
-    
-    await writeFile(
-      join(currentDir, 'package.json'),
-      JSON.stringify(updated, null, 2) + '\n'
-    );
-    
+
+    await writeFile(join(currentDir, 'package.json'), JSON.stringify(updated, null, 2) + '\n');
+
     console.log('Added @wingetcord/wingetcord to dependencies.');
   } else {
     console.log('No package.json found. Creating new project...');
-    
+
     const newPackage: PackageJson = {
       name: 'my-wingetcord-bot',
       version: '1.0.0',
@@ -96,12 +93,9 @@ async function init(): Promise<void> {
         '@types/node': '^20.0.0',
       },
     };
-    
-    await writeFile(
-      join(currentDir, 'package.json'),
-      JSON.stringify(newPackage, null, 2) + '\n'
-    );
-    
+
+    await writeFile(join(currentDir, 'package.json'), JSON.stringify(newPackage, null, 2) + '\n');
+
     // Create tsconfig.json
     const tsconfig = {
       compilerOptions: {
@@ -117,15 +111,12 @@ async function init(): Promise<void> {
       },
       include: ['src/**/*'],
     };
-    
-    await writeFile(
-      join(currentDir, 'tsconfig.json'),
-      JSON.stringify(tsconfig, null, 2) + '\n'
-    );
-    
+
+    await writeFile(join(currentDir, 'tsconfig.json'), JSON.stringify(tsconfig, null, 2) + '\n');
+
     // Create src directory
     await mkdir(join(currentDir, 'src'), { recursive: true });
-    
+
     // Create example index.ts
     const exampleCode = `import { Client, GatewayIntentBits } from '@wingetcord/wingetcord';
 
@@ -149,9 +140,9 @@ client.on('messageCreate', (message) => {
 
 client.login();
 `;
-    
+
     await writeFile(join(currentDir, 'src', 'index.ts'), exampleCode);
-    
+
     console.log('Project initialized successfully!');
     console.log('Run npm install to install dependencies.');
     console.log('Run npm run dev to start the bot.');
@@ -160,19 +151,19 @@ client.login();
 
 async function makeCommand(options: MakeCommandOptions): Promise<void> {
   const { name, type = 'slash', description = 'A command' } = options;
-  
+
   const currentDir = process.cwd();
   const commandsDir = join(currentDir, 'src', 'commands');
-  
+
   if (!(await directoryExists(commandsDir))) {
     await mkdir(commandsDir, { recursive: true });
   }
-  
+
   const fileName = `${name}.ts`;
   const filePath = join(commandsDir, fileName);
-  
+
   let template: string;
-  
+
   if (type === 'slash') {
     template = `import { CommandBuilder } from '@wingetcord/wingetcord';
 
@@ -204,24 +195,24 @@ export const ${name} = {
 };
 `;
   }
-  
+
   await writeFile(filePath, template);
   console.log(`Created command: src/commands/${fileName}`);
 }
 
 async function makeEvent(options: EventOptions): Promise<void> {
   const { name, event = 'messageCreate' } = options;
-  
+
   const currentDir = process.cwd();
   const eventsDir = join(currentDir, 'src', 'events');
-  
+
   if (!(await directoryExists(eventsDir))) {
     await mkdir(eventsDir, { recursive: true });
   }
-  
+
   const fileName = `${name}.ts`;
   const filePath = join(eventsDir, fileName);
-  
+
   const template = `import { Event } from '@wingetcord/wingetcord';
 
 @Event('${event}')
@@ -231,7 +222,7 @@ export class ${name}Event {
   }
 }
 `;
-  
+
   await writeFile(filePath, template);
   console.log(`Created event: src/events/${fileName}`);
 }
@@ -239,12 +230,12 @@ export class ${name}Event {
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const command = args[0];
-  
+
   switch (command) {
     case 'init':
       await init();
       break;
-      
+
     case 'make:command': {
       const name = args[1];
       if (!name) {
@@ -255,7 +246,7 @@ async function main(): Promise<void> {
       await makeCommand({ name, ...(args[2] ? { description: args[2] } : {}) });
       break;
     }
-    
+
     case 'make:event': {
       const name = args[1];
       if (!name) {
@@ -266,7 +257,7 @@ async function main(): Promise<void> {
       await makeEvent({ name, ...(args[2] ? { event: args[2] } : {}) });
       break;
     }
-    
+
     default:
       console.log('WingetCord CLI');
       console.log('');

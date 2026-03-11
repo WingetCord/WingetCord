@@ -44,7 +44,9 @@ export function Once(event: string) {
 /**
  * Get event metadata from a class
  */
-export function getEventMetadata(target: Function): { event: string; type: 'on' | 'once' } | undefined {
+export function getEventMetadata(
+  target: Function
+): { event: string; type: 'on' | 'once' } | undefined {
   return eventMetadataStore.get(target);
 }
 
@@ -71,4 +73,4 @@ export const DiscordEvents = {
   PRESENCE_UPDATE: 'PRESENCE_UPDATE',
 } as const;
 
-export type DiscordEvent = typeof DiscordEvents[keyof typeof DiscordEvents];
+export type DiscordEvent = (typeof DiscordEvents)[keyof typeof DiscordEvents];

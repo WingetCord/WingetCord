@@ -1,5 +1,6 @@
 import { BaseStructure } from './Base.js';
 import type { Client } from '../client/Client.js';
+type AnyClient = any;
 
 export interface MessagePayload {
   id: string;
@@ -114,7 +115,7 @@ export class Message extends BaseStructure {
   type: number;
   webhookId: string | undefined;
 
-  constructor(client: Client, data: MessagePayload) {
+  constructor(client: AnyClient, data: MessagePayload) {
     super(client);
     this.id = data.id;
     this.channelId = data.channel_id;
@@ -135,28 +136,128 @@ export class Message extends BaseStructure {
     this.webhookId = data.webhook_id;
   }
 
+  /**
+   * Reply to this message
+   *
+   * Sends a new message in the same channel as the original message,
+   * with a reference to the original message (creating a thread-like connection).
+   *
+   * @param content - The message content to send
+   * @returns A Promise that resolves with the new Message instance
+   *
+   * @example
+   * ```typescript
+   * // Reply to a message
+   * const newMessage = await message.reply('Hello, world!');
+   * console.log(`Replied with: ${newMessage.content}`);
+   * ```
+   *
+   * @remarks
+   * This method sends a message that references the original message. Discord will
+   * display this as a reply in the UI. The referenced message must be in the same
+   * channel as the new message.
+   */
   async reply(content: string): Promise<Message> {
-    const data = await this.client.rest.post<MessagePayload>(`/channels/${this.channelId}/messages`, {
-      content,
-      message_reference: { message_id: this.id, channel_id: this.channelId },
-    });
+    const data = await this.client.rest.post<MessagePayload>(
+      `/channels/${this.channelId}/messages`,
+      {
+        content,
+        message_reference: { message_id: this.id, channel_id: this.channelId },
+      }
+    );
     return new Message(this.client, data);
   }
 
+  /**
+   * Delete this message
+   *
+   * Permanently deletes the message. This action cannot be undone.
+   *
+   * @returns A Promise that resolves when the message is deleted
+   *
+   * @example
+   * ```typescript
+   * // Delete a message
+   * await message.delete();
+   * console.log('Message deleted successfully');
+   * ```
+   *
+   * @remarks
+   * - The bot must have 'Manage Messages' permission in the channel
+   * - You can only delete your own messages unless you have 'Manage Messages' permission
+   * - This action is permanent and cannot be undone
+   */
   async delete(): Promise<void> {
     await this.client.rest.delete(`/channels/${this.channelId}/messages/${this.id}`);
   }
 
+  /**
+   * Pin this message
+   *
+   * Pins the message in its channel. Pinned messages appear at the top of the channel.
+   *
+   * @returns A Promise that resolves when the message is pinned
+   *
+   * @example
+   * ```typescript
+   * // Pin a message
+   * await message.pin();
+   * console.log('Message pinned');
+   * ```
+   *
+   * @remarks
+   * - The bot must have 'Manage Messages' permission in the channel
+   * - There is a limit of 50 pinned messages per channel
+   */
   async pin(): Promise<void> {
     await this.client.rest.put(`/channels/${this.channelId}/pins/${this.id}`);
   }
 
+  /**
+   * Unpin this message
+   *
+   * Removes the pin from the message in its channel.
+   *
+   * @returns A Promise that resolves when the message is unpinned
+   *
+   * @example
+   * ```typescript
+   * // Unpin a message
+   * await message.unpin();
+   * console.log('Message unpinned');
+   * ```
+   *
+   * @remarks
+   * The bot must have 'Manage Messages' permission in the channel
+   */
   async unpin(): Promise<void> {
     await this.client.rest.delete(`/channels/${this.channelId}/pins/${this.id}`);
   }
 
+  /**
+   * Crosspost this message
+   *
+   * Publishes this message to all subscribers of the channel's webhooks.
+   * This is only available in announcement channels.
+   *
+   * @returns A Promise that resolves with the new crossposted Message instance
+   *
+   * @example
+   * ```typescript
+   * // Crosspost an announcement
+   * const crossposted = await message.crosspost();
+   * console.log(`Crossposted to ${crossposted.id}`);
+   * ```
+   *
+   * @remarks
+   * - This method only works in announcement channels
+   * - The channel must be a news channel
+   * - The bot must have 'Manage Webhooks' permission
+   */
   async crosspost(): Promise<Message> {
-    const data = await this.client.rest.post<MessagePayload>(`/channels/${this.channelId}/messages/${this.id}/crosspost`);
+    const data = await this.client.rest.post<MessagePayload>(
+      `/channels/${this.channelId}/messages/${this.id}/crosspost`
+    );
     return new Message(this.client, data);
   }
 }
@@ -268,7 +369,11 @@ export class Reaction {
   me: boolean;
   emoji: ReactionEmoji;
 
-  constructor(data: { count: number; me: boolean; emoji: { id: string | null; name: string; animated?: boolean } }) {
+  constructor(data: {
+    count: number;
+    me: boolean;
+    emoji: { id: string | null; name: string; animated?: boolean };
+  }) {
     this.count = data.count;
     this.me = data.me;
     this.emoji = new ReactionEmoji(data.emoji);

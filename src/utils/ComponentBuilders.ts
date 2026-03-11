@@ -89,7 +89,15 @@ export class SelectMenuBuilder {
     return this;
   }
 
-  addOptions(...options: { label: string; value: string; description?: string; emoji?: any; default?: boolean }[]) {
+  addOptions(
+    ...options: {
+      label: string;
+      value: string;
+      description?: string;
+      emoji?: any;
+      default?: boolean;
+    }[]
+  ) {
     this.data.options.push(...options);
     return this;
   }
@@ -117,7 +125,7 @@ export class ActionRowBuilder {
   toJSON() {
     return {
       type: ComponentType.ActionRow,
-      components: this.components
+      components: this.components,
     };
   }
 }

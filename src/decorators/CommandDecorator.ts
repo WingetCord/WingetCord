@@ -6,13 +6,16 @@
 /**
  * Command metadata storage
  */
-const commandMetadataStore = new Map<Function, {
-  name: string;
-  description?: string;
-  options?: CommandOption[];
-  cooldown?: number;
-  permissions?: string[];
-}>();
+const commandMetadataStore = new Map<
+  Function,
+  {
+    name: string;
+    description?: string;
+    options?: CommandOption[];
+    cooldown?: number;
+    permissions?: string[];
+  }
+>();
 
 export interface CommandOption {
   name: string;
@@ -40,7 +43,7 @@ export function Command(options: { name: string; description?: string }) {
  */
 export function Option(options: CommandOption) {
   return function (_target: Function, _propertyKey: string, _descriptor: PropertyDescriptor) {
-    const metadata = commandMetadataStore.get(target);
+    const metadata = commandMetadataStore.get(_target);
     if (metadata) {
       metadata.options = metadata.options || [];
       metadata.options.push(options);

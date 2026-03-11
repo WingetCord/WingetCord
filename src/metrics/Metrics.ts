@@ -4,8 +4,11 @@
 
 export class Counter {
   private counts = new Map<string, number>();
-  
-  constructor(public readonly name: string, public readonly help: string) {}
+
+  constructor(
+    public readonly name: string,
+    public readonly help: string
+  ) {}
 
   inc(labels: Record<string, string> = {}, value = 1): void {
     const key = this.labelsToKey(labels);
@@ -21,14 +24,20 @@ export class Counter {
   }
 
   private labelsToKey(labels: Record<string, string>): string {
-    return Object.entries(labels).sort().map(([k, v]) => `${k}="${v}"`).join(',');
+    return Object.entries(labels)
+      .sort()
+      .map(([k, v]) => `${k}="${v}"`)
+      .join(',');
   }
 }
 
 export class Gauge {
   private values = new Map<string, number>();
-  
-  constructor(public readonly name: string, public readonly help: string) {}
+
+  constructor(
+    public readonly name: string,
+    public readonly help: string
+  ) {}
 
   set(value: number, labels: Record<string, string> = {}): void {
     this.values.set(this.labelsToKey(labels), value);
@@ -48,13 +57,16 @@ export class Gauge {
   }
 
   private labelsToKey(labels: Record<string, string>): string {
-    return Object.entries(labels).sort().map(([k, v]) => `${k}="${v}"`).join(',');
+    return Object.entries(labels)
+      .sort()
+      .map(([k, v]) => `${k}="${v}"`)
+      .join(',');
   }
 }
 
 export class Histogram {
   private observations: number[] = [];
-  
+
   constructor(
     public readonly name: string,
     public readonly help: string,

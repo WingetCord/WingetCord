@@ -1,7 +1,12 @@
 /**
  * Cache Manager - Central cache registry
  */
-import type { GuildPayload, ChannelPayload, UserPayload, MemberPayload } from '../types/payloads.js';
+import type {
+  GuildPayload,
+  ChannelPayload,
+  UserPayload,
+  MemberPayload,
+} from '../types/payloads.js';
 import { TTLCache } from './TTLCache.js';
 
 export class CacheManager {
@@ -100,7 +105,7 @@ export class CacheManager {
    */
   invalidateGuild(guildId: string): void {
     this.guilds.delete(guildId);
-    
+
     // Invalidate all channels belonging to this guild
     for (const key of this.channels.getAllKeys()) {
       const channel = this.channels.get(key);

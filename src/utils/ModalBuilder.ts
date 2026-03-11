@@ -75,7 +75,7 @@ export class ModalBuilder {
           components: component.map(c => c.toJSON?.() || c),
         });
       } else if (component.toJSON?.().type === ComponentType.ActionRow) {
-          this.data.components.push(component.toJSON());
+        this.data.components.push(component.toJSON());
       } else {
         this.data.components.push({
           type: ComponentType.ActionRow,

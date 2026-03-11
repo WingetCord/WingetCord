@@ -68,7 +68,8 @@ export class Timestamp {
    * Create a timestamp string from a Date or timestamp.
    */
   static format(date: Date | number | string, style?: string): string {
-    const d = typeof date === 'string' ? new Date(date) : typeof date === 'number' ? new Date(date) : date;
+    const d =
+      typeof date === 'string' ? new Date(date) : typeof date === 'number' ? new Date(date) : date;
     const ts = Math.floor(d.getTime() / 1000);
     return `<t:${ts}${style ? `:${style}` : ''}>`;
   }

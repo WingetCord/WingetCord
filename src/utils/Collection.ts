@@ -69,7 +69,10 @@ export class Collection<K, V> extends Map<K, V> {
   /**
    * Reduce to single value
    */
-  reduce<T>(reducer: (accumulator: T, value: V, key: K, collection: this) => T, initialValue: T): T {
+  reduce<T>(
+    reducer: (accumulator: T, value: V, key: K, collection: this) => T,
+    initialValue: T
+  ): T {
     let result = initialValue;
     for (const [key, value] of this) {
       result = reducer(result, value, key, this);

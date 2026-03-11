@@ -50,10 +50,7 @@ export class PermissionsBitField {
 
   constructor(permissions: bigint | Permission | Permission[] = 0n) {
     if (Array.isArray(permissions)) {
-      this.bitfield = permissions.reduce(
-        (acc, p) => acc | (PermissionFlagsBits[p] ?? 0n),
-        0n
-      );
+      this.bitfield = permissions.reduce((acc, p) => acc | (PermissionFlagsBits[p] ?? 0n), 0n);
     } else if (typeof permissions === 'string') {
       this.bitfield = PermissionFlagsBits[permissions] ?? 0n;
     } else {
@@ -92,10 +89,7 @@ export class PermissionsBitField {
 
   reset(permissions: bigint | Permission | Permission[] = 0n): this {
     if (Array.isArray(permissions)) {
-      this.bitfield = permissions.reduce(
-        (acc, p) => acc | (PermissionFlagsBits[p] ?? 0n),
-        0n
-      );
+      this.bitfield = permissions.reduce((acc, p) => acc | (PermissionFlagsBits[p] ?? 0n), 0n);
     } else if (typeof permissions === 'string') {
       this.bitfield = PermissionFlagsBits[permissions] ?? 0n;
     } else {

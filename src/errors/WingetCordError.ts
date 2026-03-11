@@ -4,7 +4,10 @@
  */
 
 export class WingetCordError extends Error {
-  constructor(message: string, public readonly code: string) {
+  constructor(
+    message: string,
+    public readonly code: string
+  ) {
     super(message);
     this.name = 'WingetCordError';
     Object.setPrototypeOf(this, new.target.prototype);

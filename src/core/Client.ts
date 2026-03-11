@@ -42,7 +42,8 @@ export class Client extends EventEmitter {
     let intentValue = 0;
     if (Array.isArray(options.intents)) {
       for (const intent of options.intents) {
-        intentValue |= IntentBits[intent as keyof typeof IntentBits] as number || 0;
+        const bit = (IntentBits as any)[intent];
+        if (bit) intentValue |= bit;
       }
     } else {
       intentValue = options.intents;
@@ -66,7 +67,10 @@ export class Client extends EventEmitter {
   }
 
   say(channelId: string, content: string | unknown) {
-    return this.rest.channels.sendMessage(channelId, typeof content === 'string' ? { content } : content);
+    return this.rest.channels.sendMessage(
+      channelId,
+      typeof content === 'string' ? { content } : content
+    );
   }
 
   onMessage(callback: (message: unknown) => unknown): this {
@@ -102,7 +106,7 @@ export class Client extends EventEmitter {
   async login() {
     try {
       const rawUser = await this.rest.request('GET', '/users/@me');
-      this.user = new User(this as unknown as import('../client/Client').Client, rawUser);
+      this.user = new User(this as any, rawUser as any);
       Logger.info(`Logged in as ${this.user.username}`);
 
       await this.commands.syncSlashCommands();
@@ -124,7 +128,7 @@ export class Client extends EventEmitter {
       } else {
         let eventData = data;
         if (event === 'MESSAGE_CREATE') {
-          eventData = new Message(this as unknown as import('../client/Client').Client, data as Record<string, unknown>);
+          eventData = new Message(this as any, data as any);
         }
 
         this.emit(event, eventData);
@@ -132,6 +136,6 @@ export class Client extends EventEmitter {
       }
     };
 
-    await next().catch((err) => Logger.error(`Middleware error on ${event}:`, err));
+    await next().catch(err => Logger.error(`Middleware error on ${event}:`, err));
   }
 }

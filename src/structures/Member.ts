@@ -33,7 +33,11 @@ export class Member extends BaseStructure {
   public readonly pending: boolean | undefined;
   public readonly permissions: string | undefined;
 
-  constructor(client: Client, data: GuildMemberPayload, public readonly guildId: string) {
+  constructor(
+    client: Client,
+    data: GuildMemberPayload,
+    public readonly guildId: string
+  ) {
     super(client);
     this.user = data.user ? new User(client, data.user) : undefined;
     this.nick = data.nick ?? null;

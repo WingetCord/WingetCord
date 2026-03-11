@@ -1,5 +1,8 @@
 export abstract class Event {
-  constructor(public name: string, public once = false) {}
+  constructor(
+    public name: string,
+    public once = false
+  ) {}
   abstract execute(...args: unknown[]): void | Promise<void>;
 }
 

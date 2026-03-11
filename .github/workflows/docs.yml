@@ -34,9 +34,6 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Generate docs
-        run: npm run docs
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

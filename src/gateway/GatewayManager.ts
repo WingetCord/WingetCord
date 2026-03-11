@@ -4,7 +4,12 @@
 import { EventEmitter } from 'events';
 import { GATEWAY_URL, GatewayOpcodes } from './GatewayConstants.js';
 
-export type GatewayStatus = 'CONNECTED' | 'CONNECTING' | 'DISCONNECTED' | 'RECONNECTING' | 'RESUMING';
+export type GatewayStatus =
+  | 'CONNECTED'
+  | 'CONNECTING'
+  | 'DISCONNECTED'
+  | 'RECONNECTING'
+  | 'RESUMING';
 
 export class GatewayManager extends EventEmitter {
   private _ws: unknown = null;
@@ -13,7 +18,10 @@ export class GatewayManager extends EventEmitter {
   public status: GatewayStatus = 'DISCONNECTED';
   public ping = 0;
 
-  constructor(private _token: string, private _intents: number) {
+  constructor(
+    private _token: string,
+    private _intents: number
+  ) {
     super();
   }
 

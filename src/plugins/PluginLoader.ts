@@ -47,7 +47,7 @@ export class PluginLoader {
    */
   async loadFromDirectory(options: LoadOptions): Promise<LoadResult> {
     const { directory, patterns = ['.js', '.ts', '.mjs'], recursive = true } = options;
-    
+
     const result: LoadResult = {
       success: true,
       loaded: [],
@@ -57,7 +57,7 @@ export class PluginLoader {
 
     try {
       const files = this.scanDirectory(directory, recursive, patterns);
-      
+
       for (const file of files) {
         try {
           const plugin = await this.loadPlugin(file, options.config?.[this.getPluginName(file)]);
@@ -103,11 +103,14 @@ export class PluginLoader {
   async loadPlugin(filePath: string, config?: Record<string, unknown>): Promise<Plugin | null> {
     const url = pathToFileURL(filePath).href;
     const module = await import(url);
-    
+
     // Find the plugin class in the module
-    const PluginClass = module.default || module.Plugin || Object.values(module).find(
-      (v) => v && typeof v === 'function' && v.prototype instanceof Plugin
-    );
+    const PluginClass =
+      module.default ||
+      module.Plugin ||
+      Object.values(module).find(
+        v => v && typeof v === 'function' && v.prototype instanceof Plugin
+      );
 
     if (!PluginClass) {
       throw new Error(`No Plugin class found in ${filePath}`);
@@ -115,9 +118,11 @@ export class PluginLoader {
 
     const plugin = new PluginClass(config) as Plugin;
     this.loadedPlugins.set(plugin.metadata.name, plugin);
-    
-    Logger.info(`[PluginLoader] Loaded plugin: ${plugin.metadata.name} v${plugin.metadata.version}`);
-    
+
+    Logger.info(
+      `[PluginLoader] Loaded plugin: ${plugin.metadata.name} v${plugin.metadata.version}`
+    );
+
     return plugin;
   }
 
@@ -127,14 +132,14 @@ export class PluginLoader {
   async resolveDependencies(): Promise<void> {
     for (const [name, plugin] of this.loadedPlugins) {
       const deps = plugin.metadata.dependencies || [];
-      
+
       for (const depName of deps) {
         const depPlugin = this.loadedPlugins.get(depName);
-        
+
         if (!depPlugin) {
           throw new Error(`Plugin ${name} requires ${depName} but it's not loaded`);
         }
-        
+
         plugin._setDependency(depName, depPlugin);
       }
 
@@ -173,7 +178,7 @@ export class PluginLoader {
    */
   async unloadPlugin(name: string): Promise<boolean> {
     const plugin = this.loadedPlugins.get(name);
-    
+
     if (!plugin) {
       Logger.warn(`[PluginLoader] Plugin ${name} not found`);
       return false;
@@ -188,14 +193,14 @@ export class PluginLoader {
     }
 
     plugin._setState(PluginState.STOPPING);
-    
+
     if (plugin.onStop) {
       await plugin.onStop(this.client);
     }
 
     plugin._setState(PluginState.STOPPED);
     this.loadedPlugins.delete(name);
-    
+
     Logger.info(`[PluginLoader] Unloaded plugin: ${name}`);
     return true;
   }
@@ -205,7 +210,7 @@ export class PluginLoader {
    */
   async reloadPlugin(name: string): Promise<boolean> {
     const plugin = this.loadedPlugins.get(name);
-    
+
     if (!plugin) {
       Logger.warn(`[PluginLoader] Plugin ${name} not found for reload`);
       return false;
@@ -220,7 +225,7 @@ export class PluginLoader {
     // Otherwise, do full reload
     const config = plugin.config;
     const filePath = this.getPluginFilePath(name);
-    
+
     if (!filePath) {
       Logger.error(`[PluginLoader] Cannot find file for plugin ${name}`);
       return false;
@@ -228,7 +233,7 @@ export class PluginLoader {
 
     // Unload first
     await this.unloadPlugin(name);
-    
+
     // Reload
     try {
       await this.loadPlugin(filePath, config);

@@ -7,7 +7,6 @@ import { readdirSync } from 'fs';
 import { join } from 'path';
 import { pathToFileURL } from 'url';
 import type { Client } from './Client.js';
-import { Logger } from './Logger.js';
 
 export class EventManager {
   constructor(private client: Client) {}

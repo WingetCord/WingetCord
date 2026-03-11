@@ -164,7 +164,7 @@ export function parseRoute(route: string): RouteMetadata {
     method: 'GET' as HttpMethod,
     route,
     hasMajorParam,
-    majorParam,
+    majorParam: majorParam ?? '',
   };
 }
 

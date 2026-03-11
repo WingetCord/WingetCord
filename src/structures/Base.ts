@@ -1,11 +1,8 @@
-import type { Client } from '../core/Client.js';
+import type { Client } from '../client/Client.js';
 
-export abstract class BaseStructure {
+/**
+ * Base Structure
+ */
+export class BaseStructure {
   constructor(public readonly client: Client) {}
-
-  abstract patch(data: unknown): void;
-
-  clone(): this {
-    return Object.assign(Object.create(Object.getPrototypeOf(this)), this);
-  }
 }

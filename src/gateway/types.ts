@@ -315,7 +315,7 @@ export interface GatewayState {
 /**
  * Gateway event listener
  */
-export type GatewayEventListener<T extends GatewayEvent = GatewayEvent> = (
+export type GatewayEventListener<_T extends GatewayEvent = GatewayEvent> = (
   data: unknown
 ) => void;
 

@@ -1,60 +1,72 @@
-import { EventEmitter } from 'events';
-import { Logger } from '../core/Logger.js';
+type Listener<T> = (newValue: T, oldValue: T) => void;
 
-/**
- * ReactiveStore: A Proxy-based reactive state manager for WingetCord.
- * Supports events on change and optional persistence.
- */
-export class ReactiveStore extends EventEmitter {
-  private data: any;
+export class ReactiveStore<T extends Record<string, unknown>> {
+  public state: T;
+  private listeners = new Map<keyof T, Set<Listener<unknown>>>();
+  private globalListeners: Set<Listener<T>> = new Set();
 
-  constructor(initialData: any = {}) {
-    super();
-    this.data = this.createProxy(initialData);
+  constructor(initialState: T) {
+    this.state = { ...initialState };
   }
 
-  private createProxy(obj: any): any {
-    if (typeof obj !== 'object' || obj === null) return obj;
+  get<K extends keyof T>(key: K): T[K] {
+    return this.state[key];
+  }
 
-    // Recursively proxy nested objects
-    for (const key in obj) {
-      obj[key] = this.createProxy(obj[key]);
+  set<K extends keyof T>(key: K, value: T[K]): void {
+    const oldValue = this.state[key];
+    if (oldValue === value) return;
+
+    this.state[key] = value;
+
+    // Notify specific key listeners
+    const keyListeners = this.listeners.get(key);
+    if (keyListeners) {
+      for (const listener of keyListeners) {
+        listener(value as unknown as T, oldValue as unknown as T);
+      }
     }
 
-    return new Proxy(obj, {
-      set: (target, prop, value) => {
-        const oldValue = target[prop];
-        target[prop] = this.createProxy(value);
-        
-        if (oldValue !== value) {
-          this.emit('change', { property: prop, oldValue, newValue: value, state: this.data });
-          this.emit(`change:${String(prop)}`, { oldValue, newValue: value });
-        }
-        
-        return true;
-      },
-      deleteProperty: (target, prop) => {
-        const oldValue = target[prop];
-        delete target[prop];
-        this.emit('change', { property: prop, oldValue, newValue: undefined, state: this.data });
-        this.emit(`delete:${String(prop)}`, { oldValue });
-        return true;
-      }
-    });
+    // Notify global listeners
+    for (const listener of this.globalListeners) {
+      listener(this.state as T, { ...this.state, [key]: oldValue } as T);
+    }
   }
 
-  /**
-   * Get the underlying data.
-   */
-  get state() {
-    return this.data;
+  update(partial: Partial<T>): void {
+    for (const [key, value] of Object.entries(partial)) {
+      this.set(key as keyof T, value as T[keyof T]);
+    }
   }
 
-  /**
-   * Reset the store with new data.
-   */
-  reset(newData: any) {
-    this.data = this.createProxy(newData);
-    this.emit('reset', this.data);
+  getState(): Readonly<T> {
+    return { ...this.state };
+  }
+
+  subscribe<K extends keyof T>(key: K, listener: Listener<T[K]>): () => void {
+    if (!this.listeners.has(key)) {
+      this.listeners.set(key, new Set());
+    }
+    this.listeners.get(key)!.add(listener as Listener<unknown>);
+
+    return () => {
+      this.listeners.get(key)?.delete(listener as Listener<unknown>);
+    };
+  }
+
+  subscribeAll(listener: Listener<T>): () => void {
+    this.globalListeners.add(listener);
+    return () => {
+      this.globalListeners.delete(listener);
+    };
+  }
+
+  reset(newState: T): void {
+    const oldState = { ...this.state };
+    this.state = { ...newState };
+
+    for (const listener of this.globalListeners) {
+      listener(this.state, oldState);
+    }
   }
 }

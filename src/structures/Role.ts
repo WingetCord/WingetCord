@@ -1,44 +1,67 @@
 import { BaseStructure } from './Base.js';
-import type { Client } from '../core/Client.js';
-import { PermissionsBitField } from '../utils/BitField.js';
+import type { Client } from '../client/Client.js';
+
+export interface RolePayload {
+  id: string;
+  name: string;
+  color: number;
+  hoist: boolean;
+  icon?: string | null;
+  unicode_emoji?: string | null;
+  position: number;
+  permissions: string;
+  managed: boolean;
+  mentionable: boolean;
+  tags?: {
+    bot_id?: string;
+    integration_id?: string;
+    premium_subscriber?: null;
+  };
+}
 
 export class Role extends BaseStructure {
-  public id!: string;
-  public name!: string;
-  public color!: number;
-  public hoist!: boolean;
-  public icon?: string | null;
-  public unicodeEmoji?: string | null;
-  public position!: number;
-  public permissions!: PermissionsBitField;
-  public managed!: boolean;
-  public mentionable!: boolean;
-  public tags?: any;
+  readonly id: string;
+  readonly name: string;
+  readonly color: number;
+  readonly hoist: boolean;
+  readonly icon: string | null;
+  readonly unicodeEmoji: string | null;
+  readonly position: number;
+  readonly permissions: string;
+  readonly managed: boolean;
+  readonly mentionable: boolean;
+  readonly botId: string | undefined;
+  readonly integrationId: string | undefined;
 
-  constructor(client: Client, data: any) {
+  constructor(client: Client, data: RolePayload) {
     super(client);
-    this.patch(data);
+    this.id = data.id;
+    this.name = data.name;
+    this.color = data.color;
+    this.hoist = data.hoist;
+    this.icon = data.icon ?? null;
+    this.unicodeEmoji = data.unicode_emoji ?? null;
+    this.position = data.position;
+    this.permissions = data.permissions;
+    this.managed = data.managed;
+    this.mentionable = data.mentionable;
+    this.botId = data.tags?.bot_id;
+    this.integrationId = data.tags?.integration_id;
   }
 
-  patch(data: any) {
-    if ('id' in data) this.id = data.id;
-    if ('name' in data) this.name = data.name;
-    if ('color' in data) this.color = data.color;
-    if ('hoist' in data) this.hoist = data.hoist;
-    if ('icon' in data) this.icon = data.icon;
-    if ('unicode_emoji' in data) this.unicodeEmoji = data.unicode_emoji;
-    if ('position' in data) this.position = data.position;
-    if ('permissions' in data) this.permissions = new PermissionsBitField(BigInt(data.permissions));
-    if ('managed' in data) this.managed = data.managed;
-    if ('mentionable' in data) this.mentionable = data.mentionable;
-    if ('tags' in data) this.tags = data.tags;
-  }
-
-  get hexColor() {
-    return `#${this.color.toString(16).padStart(6, '0')}`;
-  }
-
-  toString() {
+  get mention(): string {
     return `<@&${this.id}>`;
+  }
+
+  isHoisted(): boolean {
+    return this.hoist;
+  }
+
+  isManaged(): boolean {
+    return this.managed;
+  }
+
+  isMentionable(): boolean {
+    return this.mentionable;
   }
 }

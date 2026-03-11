@@ -2,61 +2,56 @@
  * Event Decorators
  * TypeScript decorators for Discord event listeners
  */
+import { WingetCordError } from '../errors/WingetCordError.js';
 
 /**
- * Event metadata storage
+ * Event metadata storage - using Map instead of Reflect metadata to avoid type issues
  */
-const eventListeners = new Map<Function, Array<{ event: string; method: string }>>();
+const eventMetadataStore = new Map<Function, { event: string; type: 'on' | 'once' }>();
 
 /**
- * On decorator - Listen to an event
+ * On decorator - Listen to an event every time it fires
  */
 export function On(event: string) {
-  return (target: object, propertyKey: string | symbol, descriptor: PropertyDescriptor) => {
-    const events = eventListeners.get(target.constructor) || [];
-    events.push({
-      event,
-      method: propertyKey as string,
-    });
-    eventListeners.set(target.constructor, events);
+  return function (target: Function) {
+    const existing = eventMetadataStore.get(target);
+    if (existing) {
+      throw new WingetCordError(
+        `Cannot use @On and @Once on the same class. Use one or the other.`,
+        'DECORATOR_CONFLICT'
+      );
+    }
+    eventMetadataStore.set(target, { event, type: 'on' });
   };
 }
 
 /**
- * Once decorator - Listen to an event once
+ * Once decorator - Listen to an event only the first time it fires
  */
 export function Once(event: string) {
-  return (target: object, propertyKey: string | symbol, descriptor: PropertyDescriptor) => {
-    const events = eventListeners.get(target.constructor) || [];
-    events.push({
-      event: `once:${event}`,
-      method: propertyKey as string,
-    });
-    eventListeners.set(target.constructor, events);
+  return function (target: Function) {
+    const existing = eventMetadataStore.get(target);
+    if (existing) {
+      throw new WingetCordError(
+        `Cannot use @On and @Once on the same class. Use one or the other.`,
+        'DECORATOR_CONFLICT'
+      );
+    }
+    eventMetadataStore.set(target, { event, type: 'once' });
   };
 }
 
 /**
- * Filter decorator - Filter events before handling
+ * Get event metadata from a class
  */
-export function Filter(predicate: (data: unknown) => boolean) {
-  return (target: object, propertyKey: string | symbol, descriptor: PropertyDescriptor) => {
-    return descriptor;
-  };
-}
-
-/**
- * Get all event listeners from a class
- */
-export function getEventListeners(target: new (...args: unknown[]) => unknown): Array<{ event: string; method: string }> {
-  return eventListeners.get(target.prototype) || [];
+export function getEventMetadata(target: Function): { event: string; type: 'on' | 'once' } | undefined {
+  return eventMetadataStore.get(target);
 }
 
 /**
  * Discord event types for type safety
  */
 export const DiscordEvents = {
-  // Gateway events
   READY: 'READY',
   RESUMED: 'RESUMED',
   CHANNEL_CREATE: 'CHANNEL_CREATE',
@@ -76,7 +71,4 @@ export const DiscordEvents = {
   PRESENCE_UPDATE: 'PRESENCE_UPDATE',
 } as const;
 
-/**
- * Type for Discord events
- */
 export type DiscordEvent = typeof DiscordEvents[keyof typeof DiscordEvents];

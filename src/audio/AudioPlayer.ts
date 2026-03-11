@@ -65,7 +65,7 @@ export class AudioQueue extends EventEmitter {
   private shuffle: boolean = false;
   private filters: AudioFilters = {};
   private status: PlayerStatus = 'idle';
-  private autoPlay: boolean;
+  private _autoPlay: boolean;
   private maxSize: number;
   private pausedAt: number = 0;
   
@@ -73,7 +73,7 @@ export class AudioQueue extends EventEmitter {
     super();
     this.voiceChannelId = options.voiceChannelId;
     this.textChannelId = options.textChannelId;
-    this.autoPlay = options.autoPlay ?? true;
+    this._autoPlay = options.autoPlay ?? true;
     this.maxSize = options.maxSize || 1000;
   }
   
@@ -290,7 +290,7 @@ export class AudioPlayer extends EventEmitter {
   
   private readonly maxQueues: number;
   private readonly defaultVolume: number;
-  private readonly maxHistorySize: number = 100;
+  private readonly _maxHistorySize: number = 100;
   
   constructor(options: AudioPlayerOptions = {}) {
     super();

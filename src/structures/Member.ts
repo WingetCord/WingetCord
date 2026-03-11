@@ -1,51 +1,61 @@
 import { BaseStructure } from './Base.js';
-import type { Client } from '../core/Client.js';
+import type { Client } from '../client/Client.js';
 import { User } from './User.js';
-import { PermissionsBitField } from '../utils/BitField.js';
+
+export interface GuildMemberPayload {
+  user?: {
+    id: string;
+    username: string;
+    discriminator: string;
+    avatar: string | null;
+    bot?: boolean;
+  };
+  nick?: string;
+  roles: string[];
+  joined_at: string;
+  premium_since?: string;
+  deaf: boolean;
+  mute: boolean;
+  flags: number;
+  pending?: boolean;
+  permissions?: string;
+}
 
 export class Member extends BaseStructure {
-  public user?: User;
-  public nick?: string | null;
-  public avatar?: string | null;
-  public roles!: string[];
-  public joinedAt!: string;
-  public premiumSince?: string | null;
-  public deaf!: boolean;
-  public mute!: boolean;
-  public flags!: number;
-  public pending?: boolean;
-  public permissions?: PermissionsBitField;
-  public communicationDisabledUntil?: string | null;
+  public readonly user: User | undefined;
+  public readonly nick: string | null;
+  public readonly roles: string[];
+  public readonly joinedAt: Date;
+  public readonly premiumSince: Date | null;
+  public readonly deaf: boolean;
+  public readonly mute: boolean;
+  public readonly flags: number;
+  public readonly pending: boolean | undefined;
+  public readonly permissions: string | undefined;
 
-  constructor(client: Client, data: any) {
+  constructor(client: Client, data: GuildMemberPayload, public readonly guildId: string) {
     super(client);
-    this.patch(data);
+    this.user = data.user ? new User(client, data.user) : undefined;
+    this.nick = data.nick ?? null;
+    this.roles = data.roles;
+    this.joinedAt = new Date(data.joined_at);
+    this.premiumSince = data.premium_since ? new Date(data.premium_since) : null;
+    this.deaf = data.deaf;
+    this.mute = data.mute;
+    this.flags = data.flags;
+    this.pending = data.pending;
+    this.permissions = data.permissions;
   }
 
-  patch(data: any) {
-    if ('user' in data) this.user = new User(this.client, data.user);
-    if ('nick' in data) this.nick = data.nick;
-    if ('avatar' in data) this.avatar = data.avatar;
-    if ('roles' in data) this.roles = data.roles;
-    if ('joined_at' in data) this.joinedAt = data.joined_at;
-    if ('premium_since' in data) this.premiumSince = data.premium_since;
-    if ('deaf' in data) this.deaf = data.deaf;
-    if ('mute' in data) this.mute = data.mute;
-    if ('flags' in data) this.flags = data.flags;
-    if ('pending' in data) this.pending = data.pending;
-    if ('permissions' in data && data.permissions) this.permissions = new PermissionsBitField(BigInt(data.permissions));
-    if ('communication_disabled_until' in data) this.communicationDisabledUntil = data.communication_disabled_until;
+  get displayName(): string {
+    return this.nick ?? this.user?.username ?? 'Unknown';
   }
 
-  get id() {
-    return this.user?.id;
+  get mention(): string {
+    return `<@!${this.user?.id}>`;
   }
 
-  get displayName() {
-    return this.nick || this.user?.globalName || this.user?.username;
-  }
-
-  toString() {
-    return `<@${this.id}>`;
+  hasRole(roleId: string): boolean {
+    return this.roles.includes(roleId);
   }
 }

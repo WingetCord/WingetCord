@@ -1,80 +1,105 @@
-export * from './core/Client.js';
-export * from './core/RESTManager.js';
-export * from './core/GatewayManager.js';
-export * from './core/Logger.js';
-export * from './core/CommandManager.js';
-export { Cache, CacheManager } from './core/CacheManager.js';
-export * from './core/EventManager.js';
-export { PluginManager } from './core/PluginManager.js';
-export * from './core/InteractionManager.js';
-export * from './core/HandlerManager.js';
-export * from './voice/VoiceManager.js';
-export * from './voice/AudioPlayer.js';
+/**
+ * WingetCord - Discord Framework for TypeScript
+ * Main entry point
+ */
 
-// Smart Caching System
-export { LRUCache, LFUCache, TTLCache, CompositeCache, type ICache, type CacheEntry } from './cache/index.js';
-export { MemoryCache, CacheManager as SmartCacheManager, type CacheAdapter, type CacheStats } from './cache/index.js';
+// Import reflect-metadata first for decorator support
+import 'reflect-metadata';
 
-// Plugin & Middleware System
-export { Plugin, PluginState, createPluginMetadata, type PluginMetadata, type ConfigField } from './plugins/index.js';
-export { PluginLoader, type LoadOptions, type LoadResult } from './plugins/index.js';
-export { MiddlewareManager, type MiddlewareContext, type NextFunction, type MiddlewareFunction, createRateLimiter, createValidator, createLoggingMiddleware, createErrorHandler } from './middleware/index.js';
+// Errors
+export * from './errors/index.js';
+
+// Types
+export * from './types/index.js';
+
+// Gateway
+export * from './gateway/GatewayConstants.js';
+
+// Utils
+export { Collection } from './utils/Collection.js';
+export { BitField } from './utils/BitField.js';
+export { Color, DiscordColors } from './utils/Color.js';
+export { Validator } from './utils/Validator.js';
+export { PermissionsBitField, PermissionFlagsBits } from './utils/PermissionsBitField.js';
+
+// Cache
+export { TTLCache } from './cache/TTLCache.js';
+export { LRUCache } from './cache/LRUCache.js';
+export { LFUCache } from './cache/LFUCache.js';
+export { CacheManager } from './cache/CacheManager.js';
 
 // Decorators
-export { Command, Option, SubCommand, StringOption, NumberOption, IntegerOption, BooleanOption, UserOption, ChannelOption, RoleOption, Choices, Cooldown, Permissions, getCommandMetadata, getCommandOptions, getCooldown, getPermissions, scanCommands, type CommandOptions, type CommandOption, type DecoratedCommand } from './decorators/index.js';
-export { On, Once, Filter, getEventListeners, DiscordEvents, type DiscordEvent } from './decorators/index.js';
+export * from './decorators/EventDecorator.js';
+export * from './decorators/CommandDecorator.js';
 
-// Logging & Metrics
-export { Logger, logger, createLogger, LogLevel, type LoggerOptions, type LogContext } from './logging/index.js';
-export { MetricsRegistry, Counter, Gauge, Histogram, metrics, commandCounter, commandLatency, gatewayLatency, activeGuilds, cacheHitRatio, memoryUsage, type MetricType, type MetricValue } from './metrics/index.js';
+// Scheduler
+export { Scheduler } from './scheduler/Scheduler.js';
 
-// CLI & DX Tools
-export { runCLI, initProject, makeCommand, makePlugin, makeEvent, makeMiddleware } from './cli/index.js';
-export type { CLIOptions, PluginOptions, EventOptions, MiddlewareOptions } from './cli/index.js';
+// Metrics
+export * from './metrics/Metrics.js';
 
-// Scheduler System
-export { Scheduler, CronParser, type TaskOptions, type ScheduledTask, type TaskFunction, type TaskContext, type SchedulerOptions, type TaskType, type TaskStatus } from './scheduler/index.js';
+// Client
+export { Client } from './client/Client.js';
+export type { ClientOptions } from './client/ClientOptions.js';
+export type { ClientEvents } from './client/ClientEvents.js';
 
-// Audio System
-export { AudioPlayer, AudioQueue, type AudioTrack, type AudioFilters, type AudioQueueOptions, type AudioPlayerOptions, type AudioSourceType, type RepeatMode, type PlayerStatus, type QueueHistoryEntry } from './audio/index.js';
+// REST
+export { RESTManager } from './rest/RESTManager.js';
 
-// Type-safe utilities (use explicit exports to avoid conflicts)
-export { OPCodes, IntentBits, hasIntent, calculateIntents, type GatewayEvent } from './gateway/types.js';
-export { QueryBuilder, getRouteKey, type Route, type HttpMethod } from './rest/types.js';
-export { InteractionHandler } from './core/HandlerManager.js';
+// Gateway
+export { GatewayManager } from './gateway/GatewayManager.js';
 
-export * from './structures/Interaction.js';
-export * from './structures/Base.js';
-export * from './structures/User.js';
-export * from './structures/Message.js';
-export * from './structures/Role.js';
-export * from './structures/Member.js';
-export * from './structures/Guild.js';
+// Voice
+export { VoiceConnection } from './voice/VoiceConnection.js';
+export { VoiceManager } from './voice/VoiceManager.js';
 
-export * from './rest/GuildsHandler.js';
-export * from './rest/ChannelsHandler.js';
-export * from './rest/UsersHandler.js';
-export * from './rest/EmojiHandler.js';
-export * from './rest/StickerHandler.js';
-export * from './rest/CommandsHandler.js';
-export * from './rest/WebhooksHandler.js';
-export * from './rest/AuditLogsHandler.js';
-export * from './rest/AutoModHandler.js';
-export * from './rest/ScheduledEventsHandler.js';
+// Audio
+export { AudioQueue, type RepeatMode } from './audio/AudioQueue.js';
+export { Track, type TrackData } from './audio/Track.js';
+export { AudioPlayer } from './audio/AudioPlayer.js';
 
-export * from './utils/EmbedBuilder.js';
-export * from './utils/ComponentBuilders.js';
-export * from './utils/Validator.js';
-export * from './utils/Collector.js';
-export * from './utils/Constants.js';
-export * from './utils/ReactiveStore.js';
-export * from './utils/Enums.js';
-export * from './utils/BitField.js';
-export * from './utils/ModalBuilder.js';
-export * from './utils/Collection.js';
-export * from './utils/Color.js';
-export * from './utils/ContextMenuBuilders.js';
-export * from './utils/Permissions.js';
-export * from './utils/DiscordHelpers.js';
+// Interactions
+export { InteractionManager } from './interactions/InteractionManager.js';
+export type { Interaction, CommandInteraction, ComponentInteraction, AutocompleteInteraction, ModalSubmitInteraction } from './interactions/index.js';
 
-export * from './types/index.js';
+// Commands
+export { CommandManager } from './commands/CommandManager.js';
+export type { Command, CommandContext } from './commands/index.js';
+
+// Events
+export { EventManager } from './events/EventManager.js';
+export type { Event } from './events/index.js';
+
+// Handlers
+export { HandlerManager } from './handlers/HandlerManager.js';
+
+// Builders
+export { EmbedBuilder } from './builders/EmbedBuilder.js';
+export { ButtonBuilder } from './builders/ButtonBuilder.js';
+export { SelectMenuBuilder } from './builders/SelectMenuBuilder.js';
+export { ActionRowBuilder } from './builders/ActionRowBuilder.js';
+export { ModalBuilder } from './builders/ModalBuilder.js';
+export { TextInputBuilder } from './builders/TextInputBuilder.js';
+
+// Structures
+export { BaseStructure } from './structures/Base.js';
+export { User } from './structures/User.js';
+export { Guild } from './structures/Guild.js';
+export { Member } from './structures/Member.js';
+export { Message } from './structures/Message.js';
+export { Channel } from './structures/Channel.js';
+export { Role } from './structures/Role.js';
+export { Emoji } from './structures/Emoji.js';
+
+// Plugins
+export { PluginManager } from './plugins/PluginManager.js';
+export type { Plugin } from './plugins/Plugin.js';
+
+// Middleware
+export { MiddlewarePipeline, type MiddlewareFn } from './middleware/MiddlewarePipeline.js';
+
+// Logging
+export { Logger, logger } from './logging/Logger.js';
+
+// Package version
+export const VERSION = '1.0.0';

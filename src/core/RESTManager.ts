@@ -15,7 +15,7 @@ import { EmojiHandler } from '../rest/EmojiHandler.js';
 import type { Client } from './Client.js';
 
 // Import type-safe route utilities
-import { getRouteKey, type HttpMethod, type Route } from '../rest/types.js';
+import { getRouteKey, type Route } from '../rest/types.js';
 
 export interface RequestOptions {
   method: 'GET' | 'POST' | 'PATCH' | 'DELETE' | 'PUT';

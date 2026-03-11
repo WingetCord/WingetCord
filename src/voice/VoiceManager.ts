@@ -1,40 +1,67 @@
-import { EventEmitter } from 'events';
-import type { Client } from '../core/Client.js';
-import { Logger } from '../core/Logger.js';
+import { VoiceConnection } from './VoiceConnection.js';
 
-export class VoiceManager extends EventEmitter {
-  private connections: Map<string, any> = new Map(); // guildId -> connection
+export interface VoiceManagerOptions {
+  maxConnections?: number;
+}
 
-  constructor(private client: Client) {
-    super();
-    this.client.on('VOICE_STATE_UPDATE', (data: any) => this.handleVoiceStateUpdate(data));
-    this.client.on('VOICE_SERVER_UPDATE', (data: any) => this.handleVoiceServerUpdate(data));
+export class VoiceManager {
+  private connections = new Map<string, VoiceConnection>();
+  private maxConnections: number;
+
+  constructor(options: VoiceManagerOptions = {}) {
+    this.maxConnections = options.maxConnections ?? 100;
   }
 
-  /**
-   * Request to join a voice channel.
-   * Sends OP 4 to the Gateway.
-   */
-  async join(guildId: string, channelId: string, options: { mute?: boolean, deaf?: boolean } = {}) {
-    Logger.info(`Joining voice channel ${channelId} in guild ${guildId}...`);
-    this.client.gateway.send(JSON.stringify({
-      op: 4,
-      d: {
-        guild_id: guildId,
-        channel_id: channelId,
-        self_mute: options.mute ?? false,
-        self_deaf: options.deaf ?? false
-      }
-    }));
+  async join(guildId: string, channelId: string, adapterCreator: unknown): Promise<VoiceConnection> {
+    const key = `${guildId}:${channelId}`;
+    
+    let connection = this.connections.get(key);
+    if (connection) {
+      return connection;
+    }
+
+    if (this.connections.size >= this.maxConnections) {
+      throw new Error(`Maximum voice connections (${this.maxConnections}) reached`);
+    }
+
+    connection = new VoiceConnection(guildId, channelId);
+    await connection.join(guildId, channelId, adapterCreator);
+    this.connections.set(key, connection);
+
+    return connection;
   }
 
-  private handleVoiceStateUpdate(data: any) {
-    // Handle internal voice state changes
-    this.emit('stateUpdate', data);
+  leave(guildId: string, channelId: string): boolean {
+    const key = `${guildId}:${channelId}`;
+    const connection = this.connections.get(key);
+    
+    if (!connection) {
+      return false;
+    }
+
+    connection.disconnect();
+    this.connections.delete(key);
+    return true;
   }
 
-  private handleVoiceServerUpdate(data: any) {
-    // Handle endpoint information for voice connection
-    this.emit('serverUpdate', data);
+  getConnection(guildId: string, channelId: string): VoiceConnection | undefined {
+    const key = `${guildId}:${channelId}`;
+    return this.connections.get(key);
+  }
+
+  hasConnection(guildId: string, channelId: string): boolean {
+    const key = `${guildId}:${channelId}`;
+    return this.connections.has(key);
+  }
+
+  getAllConnections(): Map<string, VoiceConnection> {
+    return new Map(this.connections);
+  }
+
+  disconnectAll(): void {
+    for (const [, connection] of this.connections) {
+      connection.disconnect();
+    }
+    this.connections.clear();
   }
 }

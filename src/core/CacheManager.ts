@@ -13,7 +13,7 @@ export class Cache<T> extends Map<string, T> {
     this.defaultTTL = defaultTTL;
   }
 
-  set(key: string, value: T, ttl = this.defaultTTL): this {
+  override set(key: string, value: T, ttl = this.defaultTTL): this {
     if (this.size >= this.maxSize) {
       const firstKey = this.keys().next().value;
       if (firstKey) this.delete(firstKey);
@@ -22,7 +22,7 @@ export class Cache<T> extends Map<string, T> {
     return super.set(key, value);
   }
 
-  get(key: string): T | undefined {
+  override get(key: string): T | undefined {
     const expiry = this.ttls.get(key);
     if (expiry && Date.now() > expiry) {
       this.delete(key);
@@ -31,7 +31,7 @@ export class Cache<T> extends Map<string, T> {
     return super.get(key);
   }
 
-  delete(key: string): boolean {
+  override delete(key: string): boolean {
     this.ttls.delete(key);
     return super.delete(key);
   }

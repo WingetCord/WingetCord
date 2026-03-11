@@ -1,54 +1,148 @@
-import { Logger } from '../core/Logger.js';
+export class ValidationError extends Error {
+  constructor(message: string, public readonly field?: string) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
 
-/**
- * Validator: Robust data validation and sanitation.
- * strictly checks Discord payloads and user inputs.
- */
 export class Validator {
   /**
-   * Sanitizes string inputs to prevent mention spam or injection.
+   * Validate a snowflake ID
    */
-  static sanitize(input: string): string {
-    if (typeof input !== 'string') return '';
-    return input.replace(/[<>@!&]/g, (match) => {
-      switch (match) {
-        case '<': return '&lt;';
-        case '>': return '&gt;';
-        case '@': return '[@]';
-        default: return match;
-      }
-    });
+  static isSnowflake(value: string): boolean {
+    if (typeof value !== 'string') return false;
+    if (value.length < 17 || value.length > 20) return false;
+    return /^\d+$/.test(value);
   }
 
   /**
-   * Complex payload validation against required types.
+   * Validate a channel mention
    */
-  static validate(payload: any, schema: Record<string, 'string' | 'number' | 'object' | 'boolean' | 'array'>): boolean {
-    if (!payload || typeof payload !== 'object') return false;
+  static isChannelMention(value: string): boolean {
+    return /^<#\d+>$/.test(value);
+  }
 
-    for (const [key, type] of Object.entries(schema)) {
-      const val = payload[key];
-      if (val === undefined) {
-        Logger.warn(`Validation failed: Missing required field '${key}'`);
-        return false;
-      }
+  /**
+   * Validate a role mention
+   */
+  static isRoleMention(value: string): boolean {
+    return /^<@&\d+>$/.test(value);
+  }
 
-      const valType = Array.isArray(val) ? 'array' : typeof val;
-      if (valType !== type) {
-        Logger.warn(`Validation failed: Field '${key}' expected type '${type}', got '${valType}'`);
-        return false;
-      }
+  /**
+   * Validate a user mention
+   */
+  static isUserMention(value: string): boolean {
+    return /^<@!?\d+>$/.test(value);
+  }
+
+  /**
+   * Validate an emoji (unicode or custom)
+   */
+  static isEmoji(value: string): boolean {
+    // Unicode emoji
+    if (/^\p{Emoji}$/u.test(value)) return true;
+    // Custom emoji <:name:id>
+    return /^<a?:\w+:\d+>$/.test(value);
+  }
+
+  /**
+   * Validate hex color
+   */
+  static isHexColor(value: string): boolean {
+    return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(value);
+  }
+
+  /**
+   * Validate ISO8601 timestamp
+   */
+  static isISO8601(value: string): boolean {
+    const date = new Date(value);
+    return !isNaN(date.getTime());
+  }
+
+  /**
+   * Validate URL
+   */
+  static isURL(value: string): boolean {
+    try {
+      new URL(value);
+      return true;
+    } catch {
+      return false;
     }
-    return true;
   }
 
   /**
-   * Permission System: Bitwise comparison for hierarchy and overrides.
+   * Validate guild name (2-100 characters)
    */
-  static hasPermissions(memberPermissions: string | bigint, required: bigint): boolean {
-    const perms = BigInt(memberPermissions);
-    // ADMINISTRATOR (1n << 3n) bypasses all
-    if ((perms & (1n << 3n)) !== 0n) return true;
-    return (perms & required) === required;
+  static validateGuildName(name: string): void {
+    if (typeof name !== 'string') {
+      throw new ValidationError('Guild name must be a string', 'name');
+    }
+    if (name.length < 2 || name.length > 100) {
+      throw new ValidationError('Guild name must be between 2 and 100 characters', 'name');
+    }
+  }
+
+  /**
+   * Validate channel name (2-100 characters)
+   */
+  static validateChannelName(name: string): void {
+    if (typeof name !== 'string') {
+      throw new ValidationError('Channel name must be a string', 'name');
+    }
+    if (name.length < 2 || name.length > 100) {
+      throw new ValidationError('Channel name must be between 2 and 100 characters', 'name');
+    }
+  }
+
+  /**
+   * Validate role name (1-100 characters)
+   */
+  static validateRoleName(name: string): void {
+    if (typeof name !== 'string') {
+      throw new ValidationError('Role name must be a string', 'name');
+    }
+    if (name.length < 1 || name.length > 100) {
+      throw new ValidationError('Role name must be between 1 and 100 characters', 'name');
+    }
+  }
+
+  /**
+   * Validate message content (0-2000 characters)
+   */
+  static validateMessageContent(content: string): void {
+    if (typeof content !== 'string') {
+      throw new ValidationError('Message content must be a string', 'content');
+    }
+    if (content.length > 2000) {
+      throw new ValidationError('Message content must be 2000 characters or less', 'content');
+    }
+  }
+
+  /**
+   * Validate username (2-32 characters)
+   */
+  static validateUsername(username: string): void {
+    if (typeof username !== 'string') {
+      throw new ValidationError('Username must be a string', 'username');
+    }
+    if (username.length < 2 || username.length > 32) {
+      throw new ValidationError('Username must be between 2 and 32 characters', 'username');
+    }
+  }
+
+  /**
+   * Validate nickname (1-32 characters or null)
+   */
+  static validateNickname(nickname: string | null): void {
+    if (nickname === null) return;
+    if (typeof nickname !== 'string') {
+      throw new ValidationError('Nickname must be a string or null', 'nickname');
+    }
+    if (nickname.length < 1 || nickname.length > 32) {
+      throw new ValidationError('Nickname must be between 1 and 32 characters', 'nickname');
+    }
   }
 }

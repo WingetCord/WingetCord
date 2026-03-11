@@ -1,74 +1,90 @@
 /**
- * BitField utility for managing Discord's bitfield-based values (Permissions, Intents, etc.)
+ * BitField - Utility for bitwise operations
  */
 export class BitField {
-  public bitfield: bigint;
+  private bits: number;
 
-  constructor(bits: bigint | number | string | BitField = 0n) {
-    this.bitfield = this.resolve(bits);
+  constructor(bits: number = 0) {
+    this.bits = bits;
   }
 
   /**
-   * Check if the bitfield has one or more specific bits.
+   * Check if a bit is set
    */
-  has(bits: bigint | number | string | BitField): boolean {
-    const resolved = this.resolve(bits);
-    return (this.bitfield & resolved) === resolved;
+  has(bit: number): boolean {
+    return (this.bits & bit) === bit;
   }
 
   /**
-   * Add bits to the bitfield.
+   * Add a bit
    */
-  add(...bits: (bigint | number | string | BitField)[]): BitField {
-    for (const bit of bits) {
-      this.bitfield |= this.resolve(bit);
-    }
+  add(bit: number): this {
+    this.bits |= bit;
     return this;
   }
 
   /**
-   * Remove bits from the bitfield.
+   * Remove a bit
    */
-  remove(...bits: (bigint | number | string | BitField)[]): BitField {
-    for (const bit of bits) {
-      this.bitfield &= ~this.resolve(bit);
-    }
+  remove(bit: number): this {
+    this.bits &= ~bit;
     return this;
   }
 
   /**
-   * Resolve bits to a bigint. Override in child classes for custom flags.
+   * Toggle a bit
    */
-  protected resolve(bits: bigint | number | string | BitField): bigint {
-    if (typeof bits === 'bigint') return bits;
-    if (typeof bits === 'number') return BigInt(bits);
-    if (typeof bits === 'string') return BigInt(bits);
-    if (bits instanceof BitField) return bits.bitfield;
-    return 0n;
-  }
-
-  toJSON() {
-    return this.bitfield.toString();
-  }
-}
-
-import { PermissionFlags } from './Enums.js';
-
-export class PermissionsBitField extends BitField {
-  static Flags = PermissionFlags;
-
-  protected override resolve(bits: any): bigint {
-    if (typeof bits === 'string' && bits in PermissionFlags) {
-      return (PermissionFlags as any)[bits];
-    }
-    return super.resolve(bits);
+  toggle(bit: number): this {
+    this.bits ^= bit;
+    return this;
   }
 
   /**
-   * Helper to check for Administrative override.
+   * Get the raw bit value
    */
-  override has(bits: any): boolean {
-    if ((this.bitfield & PermissionFlags.Administrator) === PermissionFlags.Administrator) return true;
-    return super.has(bits);
+  valueOf(): number {
+    return this.bits;
+  }
+
+  /**
+   * Get the raw bit value as string
+   */
+  toString(): string {
+    return this.bits.toString();
+  }
+
+  /**
+   * Get all set bits as array
+   */
+  toArray(): number[] {
+    const bits: number[] = [];
+    let temp = this.bits;
+    let i = 0;
+    while (temp > 0) {
+      if (temp & 1) {
+        bits.push(1 << i);
+      }
+      temp >>= 1;
+      i++;
+    }
+    return bits;
+  }
+
+  /**
+   * Check equality
+   */
+  equals(other: BitField): boolean {
+    return this.bits === other.bits;
+  }
+
+  /**
+   * Create from array of bits
+   */
+  static from(bits: number[]): BitField {
+    const field = new BitField();
+    for (const bit of bits) {
+      field.add(bit);
+    }
+    return field;
   }
 }

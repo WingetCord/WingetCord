@@ -70,7 +70,7 @@ export class LRUCache<K, V> implements ICache<K, V> {
     this.cache.set(key, {
       value,
       timestamp: Date.now(),
-      expiresAt: ttl > 0 ? Date.now() + ttl : undefined,
+      ...(ttl > 0 ? { expiresAt: Date.now() + ttl } : {}),
       accessCount: 0,
       lastAccessed: Date.now(),
     });
@@ -157,7 +157,7 @@ export class LFUCache<K, V> implements ICache<K, V> {
     this.cache.set(key, {
       value,
       timestamp: Date.now(),
-      expiresAt: ttl > 0 ? Date.now() + ttl : undefined,
+      ...(ttl > 0 ? { expiresAt: Date.now() + ttl } : {}),
       accessCount: 1,
     });
     this.accessCounts.set(key, 1);
@@ -252,7 +252,7 @@ export class TTLCache<K, V> implements ICache<K, V> {
     this.cache.set(key, {
       value,
       timestamp: Date.now(),
-      expiresAt: ttl > 0 ? Date.now() + ttl : undefined,
+      ...(ttl > 0 ? { expiresAt: Date.now() + ttl } : {}),
     });
     
     return this;

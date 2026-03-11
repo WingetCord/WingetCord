@@ -1,91 +1,149 @@
 import { BaseStructure } from './Base.js';
-import type { Client } from '../core/Client.js';
-import { Role } from './Role.js';
+import type { Client } from '../client/Client.js';
+import { Channel, ChannelPayload } from './Channel.js';
+import { Role, RolePayload } from './Role.js';
+import { Member, GuildMemberPayload } from './Member.js';
+
+export interface GuildPayload {
+  id: string;
+  name: string;
+  icon: string | null;
+  splash: string | null;
+  discovery_splash: string | null;
+  owner_id: string;
+  region: string | null;
+  afk_channel_id: string | null;
+  afk_timeout: number;
+  verification_level: number;
+  default_message_notifications: number;
+  explicit_content_filter: number;
+  roles: RolePayload[];
+  channels: ChannelPayload[];
+  presences: Array<{
+    user: { id: string };
+    roles: string[];
+    game: { name: string } | null;
+    status: string;
+  }>;
+  max_presences: number | null;
+  max_members: number;
+  vanity_url_code: string | null;
+  description: string | null;
+  banner: string | null;
+  premium_tier: number;
+  premium_subscription_count: number;
+  preferred_locale: string;
+  public_updates_channel_id: string | null;
+  max_video_channel_users?: number;
+  approximate_member_count?: number;
+  approximate_presence_count?: number;
+}
 
 export class Guild extends BaseStructure {
-  public id!: string;
-  public name!: string;
-  public icon?: string | null;
-  public splash?: string | null;
-  public discoverySplash?: string | null;
-  public ownerId!: string;
-  public afkChannelId?: string | null;
-  public afkTimeout!: number;
-  public widgetEnabled?: boolean;
-  public widgetChannelId?: string | null;
-  public verificationLevel!: number;
-  public defaultMessageNotifications!: number;
-  public explicitContentFilter!: number;
-  public roles: Map<string, Role> = new Map();
-  public emojis: any[] = [];
-  public features: string[] = [];
-  public mfaLevel!: number;
-  public applicationId?: string | null;
-  public systemChannelId?: string | null;
-  public systemChannelFlags!: number;
-  public rulesChannelId?: string | null;
-  public maxPresences?: number | null;
-  public maxMembers?: number;
-  public vanityUrlCode?: string | null;
-  public description?: string | null;
-  public banner?: string | null;
-  public premiumTier!: number;
-  public premiumSubscriptionCount?: number;
-  public preferredLocale!: string;
-  public publicUpdatesChannelId?: string | null;
-  public maxVideoChannelUsers?: number;
-  public approximateMemberCount?: number;
-  public approximatePresenceCount?: number;
+  readonly id: string;
+  readonly name: string;
+  readonly icon: string | null;
+  readonly splash: string | null;
+  readonly ownerId: string;
+  readonly region: string | null;
+  readonly afkChannelId: string | null;
+  readonly afkTimeout: number;
+  readonly verificationLevel: number;
+  readonly defaultMessageNotifications: number;
+  readonly explicitContentFilter: number;
+  readonly vanityUrlCode: string | null;
+  readonly description: string | null;
+  readonly banner: string | null;
+  readonly premiumTier: number;
+  readonly preferredLocale: string;
+  readonly publicUpdatesChannelId: string | null;
+  readonly maxMembers: number;
+  private _channels: Map<string, Channel> = new Map();
+  private _roles: Map<string, Role> = new Map();
+  private _members: Map<string, Member> = new Map();
 
-  constructor(client: Client, data: any) {
+  constructor(client: Client, data: GuildPayload) {
     super(client);
-    this.patch(data);
-  }
+    this.id = data.id;
+    this.name = data.name;
+    this.icon = data.icon;
+    this.splash = data.splash;
+    this.ownerId = data.owner_id;
+    this.region = data.region;
+    this.afkChannelId = data.afk_channel_id;
+    this.afkTimeout = data.afk_timeout;
+    this.verificationLevel = data.verification_level;
+    this.defaultMessageNotifications = data.default_message_notifications;
+    this.explicitContentFilter = data.explicit_content_filter;
+    this.vanityUrlCode = data.vanity_url_code;
+    this.description = data.description;
+    this.banner = data.banner;
+    this.premiumTier = data.premium_tier;
+    this.preferredLocale = data.preferred_locale;
+    this.publicUpdatesChannelId = data.public_updates_channel_id;
+    this.maxMembers = data.max_members;
 
-  patch(data: any) {
-    if ('id' in data) this.id = data.id;
-    if ('name' in data) this.name = data.name;
-    if ('icon' in data) this.icon = data.icon;
-    if ('splash' in data) this.splash = data.splash;
-    if ('discovery_splash' in data) this.discoverySplash = data.discovery_splash;
-    if ('owner_id' in data) this.ownerId = data.owner_id;
-    if ('afk_channel_id' in data) this.afkChannelId = data.afk_channel_id;
-    if ('afk_timeout' in data) this.afkTimeout = data.afk_timeout;
-    if ('widget_enabled' in data) this.widgetEnabled = data.widget_enabled;
-    if ('widget_channel_id' in data) this.widgetChannelId = data.widget_channel_id;
-    if ('verification_level' in data) this.verificationLevel = data.verification_level;
-    if ('default_message_notifications' in data) this.defaultMessageNotifications = data.default_message_notifications;
-    if ('explicit_content_filter' in data) this.explicitContentFilter = data.explicit_content_filter;
-    if ('emojis' in data) this.emojis = data.emojis;
-    if ('features' in data) this.features = data.features;
-    if ('mfa_level' in data) this.mfaLevel = data.mfa_level;
-    if ('application_id' in data) this.applicationId = data.application_id;
-    if ('system_channel_id' in data) this.systemChannelId = data.system_channel_id;
-    if ('system_channel_flags' in data) this.systemChannelFlags = data.system_channel_flags;
-    if ('rules_channel_id' in data) this.rulesChannelId = data.rules_channel_id;
-    if ('max_presences' in data) this.maxPresences = data.max_presences;
-    if ('max_members' in data) this.maxMembers = data.max_members;
-    if ('vanity_url_code' in data) this.vanityUrlCode = data.vanity_url_code;
-    if ('description' in data) this.description = data.description;
-    if ('banner' in data) this.banner = data.banner;
-    if ('premium_tier' in data) this.premiumTier = data.premium_tier;
-    if ('premium_subscription_count' in data) this.premiumSubscriptionCount = data.premium_subscription_count;
-    if ('preferred_locale' in data) this.preferredLocale = data.preferred_locale;
-    if ('public_updates_channel_id' in data) this.publicUpdatesChannelId = data.public_updates_channel_id;
-    if ('max_video_channel_users' in data) this.maxVideoChannelUsers = data.max_video_channel_users;
-    if ('approximate_member_count' in data) this.approximateMemberCount = data.approximate_member_count;
-    if ('approximate_presence_count' in data) this.approximatePresenceCount = data.approximate_presence_count;
+    // Initialize channels and roles
+    for (const channelData of data.channels ?? []) {
+      const channel = new Channel(client, channelData);
+      this._channels.set(channel.id, channel);
+    }
 
-    if ('roles' in data) {
-      for (const roleData of data.roles) {
-        const role = new Role(this.client, roleData);
-        this.roles.set(role.id, role);
-      }
+    for (const roleData of data.roles ?? []) {
+      const role = new Role(client, roleData);
+      this._roles.set(role.id, role);
     }
   }
 
-  get iconURL() {
-    if (!this.icon) return null;
-    return `https://cdn.discordapp.com/icons/${this.id}/${this.icon}.${this.icon.startsWith('a_') ? 'gif' : 'png'}`;
+  get channels(): Map<string, Channel> {
+    return this._channels;
+  }
+
+  get roles(): Map<string, Role> {
+    return this._roles;
+  }
+
+  get members(): Map<string, Member> {
+    return this._members;
+  }
+
+  get channelCount(): number {
+    return this._channels.size;
+  }
+
+  get roleCount(): number {
+    return this._roles.size;
+  }
+
+  get memberCount(): number {
+    return this._members.size;
+  }
+
+  get createdAt(): Date {
+    const timestamp = (BigInt(this.id) >> 22n) + 1420070400000n;
+    return new Date(Number(timestamp));
+  }
+
+  get mention(): string {
+    return `<@${this.id}>`;
+  }
+
+  addMember(userId: string, data: GuildMemberPayload): void {
+    const member = new Member(this.client, data, this.id);
+    this._members.set(userId, member);
+  }
+
+  addChannel(data: ChannelPayload): void {
+    const channel = new Channel(this.client, data);
+    this._channels.set(channel.id, channel);
+  }
+
+  addRole(data: RolePayload): void {
+    const role = new Role(this.client, data);
+    this._roles.set(role.id, role);
+  }
+
+  override toString(): string {
+    return this.name;
   }
 }

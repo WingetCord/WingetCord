@@ -1,7 +1,7 @@
 import WebSocket from 'ws';
 import { Constants } from '../utils/Constants.js';
 import { Logger } from './Logger.js';
-import type { GatewayPayload } from '../types/index.js';
+import type { GatewayPayload } from '../types/payloads.js';
 import { EventEmitter } from 'events';
 import pako from 'pako';
 
@@ -76,14 +76,14 @@ export class GatewayManager extends EventEmitter {
       }
     });
 
-    this.ws.on('close', (code, reason) => {
+    this.ws.on('close', (code: number, reason: string) => {
       this.isConnecting = false;
       this.status = 'DISCONNECTED';
       Logger.warn(`Gateway connection closed [Shard ${this.shard?.id ?? 0}] (${code}): ${reason}`);
       this.handleClose(code);
     });
 
-    this.ws.on('error', (err) => {
+    this.ws.on('error', (err: Error) => {
       Logger.error(`Gateway Error [Shard ${this.shard?.id ?? 0}]: ${err.message}`);
     });
   }
@@ -93,7 +93,7 @@ export class GatewayManager extends EventEmitter {
 
     switch (payload.op) {
       case 10: // Hello
-        this.startHeartbeat(payload.d.heartbeat_interval);
+        this.startHeartbeat((payload.d as { heartbeat_interval: number }).heartbeat_interval);
         if (this.sessionId && this.lastSequence) {
           this.resume();
         } else {
@@ -106,8 +106,8 @@ export class GatewayManager extends EventEmitter {
         break;
       case 0: // Dispatch
         if (payload.t === 'READY') {
-          this.sessionId = payload.d.session_id;
-          this.resumeUrl = payload.d.resume_gateway_url;
+          this.sessionId = (payload.d as { session_id: string }).session_id;
+          this.resumeUrl = (payload.d as { resume_gateway_url: string }).resume_gateway_url;
         }
         if (payload.t) {
           this.emit('dispatch', payload.t, payload.d);

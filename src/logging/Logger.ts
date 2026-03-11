@@ -1,208 +1,86 @@
-/**
- * Professional Logging System
- * Structured JSON logging with correlation IDs
- */
-
-import pino from 'pino';
-
-/**
- * Log levels
- */
-export enum LogLevel {
-  TRACE = 'trace',
-  DEBUG = 'debug',
-  INFO = 'info',
-  WARN = 'warn',
-  ERROR = 'error',
-  FATAL = 'fatal',
-}
-
-/**
- * Logger options
- */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface LoggerOptions {
-  /** Log level */
-  level?: LogLevel;
-  /** Enable pretty printing */
-  pretty?: boolean;
-  /** Service name for logging */
-  service?: string;
-  /** Custom transports */
-  transports?: pino.TransportSingleOptions[];
+  name?: string;
+  level?: 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 }
 
-/**
- * Log context
- */
-export interface LogContext {
-  /** Correlation ID for request tracing */
-  correlationId?: string;
-  /** User ID if available */
-  userId?: string;
-  /** Guild ID if available */
-  guildId?: string;
-  /** Command name */
-  command?: string;
-  /** Event name */
-  event?: string;
-  /** Custom metadata */
-  [key: string]: unknown;
-}
+type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 
-/**
- * Enhanced Logger with context and structured logging
- */
+const LOG_LEVELS: Record<LogLevel, number> = {
+  trace: 10,
+  debug: 20,
+  info: 30,
+  warn: 40,
+  error: 50,
+  fatal: 60,
+};
+
 export class Logger {
-  private logger: pino.Logger;
-  private service: string;
-  private context: LogContext = {};
+  private name: string;
+  private level: LogLevel;
 
   constructor(options: LoggerOptions = {}) {
-    this.service = options.service || 'wingetcord';
-    
-    const config: pino.LoggerOptions = {
-      level: options.level || LogLevel.INFO,
-      name: this.service,
-      formatters: {
-        level: (label) => ({ level: label }),
-      },
-    };
-
-    if (options.pretty) {
-      config.transport = {
-        target: 'pino-pretty',
-        options: {
-          colorize: true,
-          translateTime: 'HH:MM:ss Z',
-          ignore: 'pid,hostname',
-        },
-      };
-    }
-
-    this.logger = pino(config);
+    this.name = options.name ?? 'wingetcord';
+    this.level = options.level ?? 'info';
   }
 
-  /**
-   * Set correlation ID for context
-   */
-  setCorrelationId(id: string): this {
-    this.context.correlationId = id;
-    return this;
+  private shouldLog(level: LogLevel): boolean {
+    return LOG_LEVELS[level] >= LOG_LEVELS[this.level];
   }
 
-  /**
-   * Set context for logging
-   */
-  setContext(context: Partial<LogContext>): this {
-    this.context = { ...this.context, ...context };
-    return this;
-  }
+  private log(level: LogLevel, message: string, ...args: any[]): void {
+    if (!this.shouldLog(level)) return;
 
-  /**
-   * Clear context
-   */
-  clearContext(): this {
-    this.context = {};
-    return this;
-  }
+    const prefix = `[${this.name}]`;
+    const msg = `${prefix} ${message}`;
 
-  /**
-   * Get child logger with additional context
-   */
-  child(bindings: LogContext): Logger {
-    const child = new Logger({ service: this.service });
-    child.context = { ...this.context, ...bindings };
-    return child;
-  }
-
-  /**
-   * Trace log
-   */
-  trace(message: string, ...args: unknown[]): void {
-    this.logger.trace(this.context, message, ...args);
-  }
-
-  /**
-   * Debug log
-   */
-  debug(message: string, ...args: unknown[]): void {
-    this.logger.debug(this.context, message, ...args);
-  }
-
-  /**
-   * Info log
-   */
-  info(message: string, ...args: unknown[]): void {
-    this.logger.info(this.context, message, ...args);
-  }
-
-  /**
-   * Warn log
-   */
-  warn(message: string, ...args: unknown[]): void {
-    this.logger.warn(this.context, message, ...args);
-  }
-
-  /**
-   * Error log
-   */
-  error(message: string, ...args: unknown[]): void {
-    this.logger.error(this.context, message, ...args);
-  }
-
-  /**
-   * Fatal log
-   */
-  fatal(message: string, ...args: unknown[]): void {
-    this.logger.fatal(this.context, message, ...args);
-  }
-
-  /**
-   * Log with custom level
-   */
-  log(level: LogLevel, message: string, ...args: unknown[]): void {
     switch (level) {
-      case LogLevel.TRACE:
-        this.trace(message, ...args);
+      case 'trace':
+      case 'debug':
+        console.debug(msg, ...args);
         break;
-      case LogLevel.DEBUG:
-        this.debug(message, ...args);
+      case 'info':
+        console.info(msg, ...args);
         break;
-      case LogLevel.INFO:
-        this.info(message, ...args);
+      case 'warn':
+        console.warn(msg, ...args);
         break;
-      case LogLevel.WARN:
-        this.warn(message, ...args);
-        break;
-      case LogLevel.ERROR:
-        this.error(message, ...args);
-        break;
-      case LogLevel.FATAL:
-        this.fatal(message, ...args);
+      case 'error':
+      case 'fatal':
+        console.error(msg, ...args);
         break;
     }
   }
 
-  /**
-   * Create logger for a specific component
-   */
-  component(name: string): Logger {
-    return this.child({ component: name });
+  trace(message: string, ...args: any[]): void {
+    this.log('trace', message, ...args);
+  }
+
+  debug(message: string, ...args: any[]): void {
+    this.log('debug', message, ...args);
+  }
+
+  info(message: string, ...args: any[]): void {
+    this.log('info', message, ...args);
+  }
+
+  warn(message: string, ...args: any[]): void {
+    this.log('warn', message, ...args);
+  }
+
+  error(message: string, ...args: any[]): void {
+    this.log('error', message, ...args);
+  }
+
+  fatal(message: string, ...args: any[]): void {
+    this.log('fatal', message, ...args);
+  }
+
+  child(bindings: Record<string, unknown>): Logger {
+    const bindingName = typeof bindings['name'] === 'string' ? bindings['name'] : 'child';
+    const newLogger = new Logger({ name: `${this.name}:${bindingName}` });
+    return newLogger;
   }
 }
 
-/**
- * Default logger instance
- */
-export const logger = new Logger({
-  level: process.env.LOG_LEVEL as LogLevel || LogLevel.INFO,
-  pretty: process.env.NODE_ENV !== 'production',
-  service: 'wingetcord',
-});
-
-/**
- * Create a scoped logger
- */
-export function createLogger(name: string): Logger {
-  return logger.component(name);
-}
+export const logger = new Logger();

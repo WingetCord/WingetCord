@@ -42,7 +42,7 @@ export class Client extends EventEmitter {
     let intentValue = 0;
     if (Array.isArray(options.intents)) {
       for (const intent of options.intents) {
-        intentValue |= IntentBits[intent] || 0;
+        intentValue |= IntentBits[intent as keyof typeof IntentBits] as number || 0;
       }
     } else {
       intentValue = options.intents;
@@ -56,8 +56,9 @@ export class Client extends EventEmitter {
     this.plugins = new PluginManager(this);
     this.interactions = new InteractionManager(this);
     this.handler = new HandlerManager(this);
-    this.voice = new VoiceManager(this);
-    this.store = new ReactiveStore().state;
+    this.voice = new VoiceManager();
+    const reactiveStore = new ReactiveStore<ClientStore>({});
+    this.store = reactiveStore.state;
 
     this.gateway.on('dispatch', (event: string, data: unknown) => {
       this.handleEvent(event, data);
@@ -101,7 +102,7 @@ export class Client extends EventEmitter {
   async login() {
     try {
       const rawUser = await this.rest.request('GET', '/users/@me');
-      this.user = new User(this, rawUser);
+      this.user = new User(this as unknown as import('../client/Client').Client, rawUser);
       Logger.info(`Logged in as ${this.user.username}`);
 
       await this.commands.syncSlashCommands();
@@ -123,7 +124,7 @@ export class Client extends EventEmitter {
       } else {
         let eventData = data;
         if (event === 'MESSAGE_CREATE') {
-          eventData = new Message(this, data as Record<string, unknown>);
+          eventData = new Message(this as unknown as import('../client/Client').Client, data as Record<string, unknown>);
         }
 
         this.emit(event, eventData);
